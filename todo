@@ -1,0 +1,192 @@
+1. 웹서버 골격 만들기
+2. request 파싱
+3. get 요청만 만들어보기
+
+
+
+nginx 파싱
+ex)
+```
+http { 
+    server {
+        listen 4242;
+        listen 4000;
+        server_name a;
+        location / {
+            root /usr/share/nginx/html;
+            index index.html index.htm;
+        }
+        location asdf {
+            root /usr/share/nginx/html;
+            index index.html index.htm;
+        }
+        location .php {
+            root /usr/share/nginx/html;
+            index index.html index.htm;
+        }
+        location .py {
+            cgi sjdfilasdjfli;
+            root /usr/share/nginx/html;
+            index index.html index.htm;
+        }
+    server {
+        listen 8080;
+        server_name b;
+        location / {
+            root /usr/share/nginx/html;
+            index index.html index.htm;
+        }
+    }
+    }
+}
+```
+ * location / { } 이부분이 location block이라고 한다
+    * location block은 여러개가 있을 수 있다
+    * location block은 가장 긴것이 우선순위가 높다
+    * location block은 = ~ ^~ ~* ~*가 있다
+    * = : 정확히 일치
+    * ~ : 대소문자 구분
+    * ~* : 대소문자 구분하지 않음
+    * ^~ : 정확히 일치하면 뒤에꺼 무시
+    * / : 가장 긴것이 우선순위가 높다
+    
+
+request 파싱
+ * request line - method sp request-target sp http-version crlf \r\n
+ * method : get post put delete 이외에 에러
+ * request-target : 맨처음 / 없으면 에러
+ * http-version : HTTP/1.0 HTTP/1.1 이외에 에러
+ * 제일 뒤에 /r없으면 에러
+
+
+requestline\r\n
+headerline ...\r\n
+...\r\n
+...\r\n
+\r\n
+body\r\n
+
+
+
+header 파싱
+ * header-field : field-name : OWS field-value OWS
+ * field-name에 ()<>@,;:\\\"/[]?={} \t\r\n\"\\^`|~ 있으면 에러
+ * field-value 제일 뒤에 '\r' 없으면 에러
+ * field-name 중복 에러 -> 이건 확인 해봐야함 캐시같은 경우 중복이 있을 수 있음 -> 중복이면 중복안되는 거 제외하고 이어야돼 
+ ex)
+ sec-ch-ua: "Chromium";v="116"
+ sec-ch-ua: "Not)A;Brand";v="24"
+
+
+
+ * content-length 있으면 body파싱 content-length의 값이 마이너스거나 숫자가 아니면 에러
+ ** 헤더가 버퍼의 크기보다 커버리면 문제가 발생!! - 해결! \r\n\r\n 찾을때까지 읽기!
+ * host는 무조건 있어야한다
+
+body파싱 buff 1024
+ * 나머지 바디부분 파싱하고 body size와 content size 비교해서 body size가 부족하면 더읽고 붙이기
+
+
+
+get 요청
+ * HttpResponse 클래스를 만들고 HttpRequest클래스를 받는다
+ * httpRequest에서 받아오는것은 유효성 검사가 끝났으니 따로 처리해주지 않아도 된다
+ ** path에 대한 에러처리 또 해야된다 ex) /../  <- 대부분의 클라이언트단에서 막혀있지만 보안상 막아주자, 또 뭐가 있을지 생각
+ * 파일 없을 때 404
+ * 권한 403
+
+
+
+nginx config 참고
+https://docs.nginx.com/nginx/admin-guide/basic-functionality/managing-configuration-files/
+
+
+http 참고
+https://hochan049.gitbook.io/cs-interview/web/rfc-7320
+https://developer.mozilla.org/ko/docs/Web/HTTP
+https://roka88.dev/105
+
+
+3/15
+1. post 요청 만들어보기
+2. delete 요청 만들어보기
+3. put 요청 만들어보기
+4. head 요청 만들어보기
+5. options 요청 만들어보기
+6. cgi 만들어보기
+7. wordpress 실행해보기
+
+
+
+
+
+class configs
+{
+    public:
+        config();
+        ~config();
+        config &operator=(const config &rhs);
+        config(const config &rhs);
+        void setConfig(std::string configPath);
+        std::map<int, config>& getConfig() const;
+};
+
+class config
+{
+    public:
+        config();
+        config(std::string root, std::string port, std::string serverName, std::string location, std::vector<std::string> method);
+        ~config();
+        config &operator=(const config &rhs);
+        config(const config &rhs);
+        std::string& getRoot() const;
+        std::string& getPort() const;
+        std::string& getServerName() const;
+        std::string& getLocation() const;
+        std::vector<std::string>& getMethod() const;
+};
+
+class server
+{
+    pubilc:
+        server();
+        ~server();
+        server &operator=(const server &rhs);
+        server(const server &rhs);
+        void setServer(configs &config);
+        void runServer();
+};
+
+class request
+{
+    public:
+        request();
+        request(int clientFd);
+        ~request();
+        request &operator=(const request &rhs);
+        request(const request &rhs);
+        void parseRequest();
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+content length 규칙
+
+1. 읽었는데 body가 content length보다 작을때 -> 1024 다읽었을때 작으면 이거는 더읽을 여지가 있어 or 읽은게 1024보다 작으면 더 읽을게 없잖어 그럼 에러처리
+2. 읽었는데 body가 content length보다 클때 -> 걍 content length만큼만 처리하고 무시 버려 버려
