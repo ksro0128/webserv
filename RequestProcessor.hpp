@@ -11,13 +11,13 @@ class RequestProcessor
 		RequestProcessor();
 		RequestProcessor(Config &config);
 		~RequestProcessor();
-		void set(Config &config, int kq);
-		void processRequests(Document &document);
+		void Set(Config &config, int kq);
+		void ProcessRequests(Document &document);
 	private:
 		RequestProcessor(const RequestProcessor &src);
 		RequestProcessor &operator=(const RequestProcessor &src);
-		Config _config;
-		int _kq;
+		Config m_config;
+		int m_kq;
 		void processRequest(Request &request);
 
 };

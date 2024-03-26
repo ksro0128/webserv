@@ -10,12 +10,12 @@ class Config
 		Config(const Config&);
 		Config& operator=(const Config&);
 		~Config();
-		void parseConfig(std::string path);
-		Server& getServer(int port, std::string serverName);
-		std::vector<int> getPorts();
+		void ParseConfig(std::string path);
+		Server& GetServer(int port, std::string serverName);
+		std::vector<int> GetPorts();
 	private:
-		std::multimap<int, Server> _configMultiMap;
-		std::string _ignoreComment(std::string filestring);
-		std::string _semicolonToSpaceSemicolonSpace(std::string filestring);
-		std::string _braceToSpaceBraceSpace(std::string filestring);
+		std::multimap<int, Server> m_configMultiMap;
+		std::string ignoreComment(std::string filestring);
+		std::string semicolonToSpaceSemicolonSpace(std::string filestring);
+		std::string braceToSpaceBraceSpace(std::string filestring);
 };

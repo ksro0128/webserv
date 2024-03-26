@@ -10,25 +10,25 @@ class Response
 		Response(const Response& rhs);
 		Response& operator=(const Response& rhs);
 		
-		void setVersion(std::string version);
-		void setStatusCode(int statusCode);
-		void setStatusMessage(std::string statusMessage);
-		void setHeader(std::string key, std::string value);
-		void setBody(std::string body);
+		void SetVersion(std::string version);
+		void SetStatusCode(int statusCode);
+		void SetStatusMessage(std::string statusMessage);
+		void SetHeader(std::string key, std::string value);
+		void SetBody(std::string body);
 		
-		std::string getVersion();
-		int getStatusCode();
-		std::string getStatusMessage();
-		std::multimap<std::string, std::string> getHeaders();
-		std::string getBody();
-		std::string getResponse();	
+		std::string GetVersion();
+		int GetStatusCode();
+		std::string GetStatusMessage();
+		std::multimap<std::string, std::string> GetHeaders();
+		std::string GetBody();
+		std::string GetResponse();	
 
 	private:
-		std::string _version;
-		int _statusCode;
-		std::string _statusMessage;
-		std::multimap<std::string, std::string> _headers;
-		std::string _body;
+		std::string m_version;
+		int m_statusCode;
+		std::string m_statusMessage;
+		std::multimap<std::string, std::string> m_headers;
+		std::string m_body;
 		std::string makeDate();
 		std::string intToString(int n);
 };
