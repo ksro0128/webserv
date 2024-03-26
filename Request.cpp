@@ -295,7 +295,7 @@ void Request::checkEssential()
             tmp = m_headers.find("content-length")->second;
             if (isNumber(m_headers.find("content-length")->second) == 0)
             {
-                m_status = 400;
+                m_status = 411;
                 std::cout << "Content-Length header is not a number\n";
                 m_reqClose = 1;
                 m_end = 1;
@@ -313,36 +313,36 @@ void Request::checkEssential()
                 }
             }
         }
-        unsigned long pos;
-        tmp = m_headers.find("host")->second;
-        if (pos = tmp.find(":"), pos != std::string::npos)
+    }
+    unsigned long pos;
+    tmp = m_headers.find("host")->second;
+    if (pos = tmp.find(":"), pos != std::string::npos)
+    {
+        m_host = tmp.substr(0, pos);
+        hostport = tmp.substr(pos + 1, tmp.length() - pos - 1);
+        if (isNumber(hostport) == 0)
         {
-            m_host = tmp.substr(0, pos);
-            hostport = tmp.substr(pos + 1, tmp.length() - pos - 1);
-            if (isNumber(hostport) == 0)
-            {
-                m_status = 400;
-                std::cout << "Port number is not a number\n";
-                m_reqClose = 1;
-                m_end = 1;
-            }
-            else
-            {
-                m_host_port = atoi(hostport.c_str());
-                if (m_host_port < 0 || m_host_port > 65535 || errno == ERANGE)
-                {
-                    m_status = 400;
-                    std::cout << "Port number is invalid\n";
-                    m_reqClose = 1;
-                    m_end = 1;
-                }
-            }
+            m_status = 400;
+            std::cout << "Port number is not a number\n";
+            m_reqClose = 1;
+            m_end = 1;
         }
         else
         {
-            m_host = tmp;
-            m_host_port = 80;
+            m_host_port = atoi(hostport.c_str());
+            if (m_host_port < 0 || m_host_port > 65535 || errno == ERANGE)
+            {
+                m_status = 400;
+                std::cout << "Port number is invalid\n";
+                m_reqClose = 1;
+                m_end = 1;
+            }
         }
+    }
+    else
+    {
+        m_host = tmp;
+        m_host_port = 80;
     }
 }
 
