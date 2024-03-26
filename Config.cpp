@@ -7,14 +7,14 @@ Config::Config()
 
 Config::Config(const Config& rhs)
 {
-	_configMultiMap = rhs._configMultiMap;
+	m_configMultiMap = rhs.m_configMultiMap;
 }
 
 Config& Config::operator=(const Config& rhs)
 {
 	if (this == &rhs)
 		return *this;
-	_configMultiMap = rhs._configMultiMap;
+	m_configMultiMap = rhs.m_configMultiMap;
 	return *this;
 }
 
@@ -22,7 +22,7 @@ Config::~Config()
 {
 }
 
-void Config::parseConfig(std::string path)
+void Config::ParseConfig(std::string path)
 {
 	std::ifstream file(path);
 	if (!file.is_open())
@@ -32,9 +32,9 @@ void Config::parseConfig(std::string path)
 	std::ostringstream fileStream;
 	fileStream << file.rdbuf();
 	std::string fileString = fileStream.str();
-	fileString = _ignoreComment(fileString);
-	fileString = _semicolonToSpaceSemicolonSpace(fileString);
-	fileString = _braceToSpaceBraceSpace(fileString);
+	fileString = ignoreComment(fileString);
+	fileString = semicolonToSpaceSemicolonSpace(fileString);
+	fileString = braceToSpaceBraceSpace(fileString);
 	std::istringstream iss(fileString);
 	std::string line;
 	while (std::getline(iss, line))
@@ -83,10 +83,10 @@ void Config::parseConfig(std::string path)
 					throw std::runtime_error("Error: config file is invalid\nline: " + line + "\n");
 				}
 				Server server;
-				server.parseServer(block);
-				for (std::vector<int>::iterator it = server.getPort().begin(); it != server.getPort().end(); it++)
+				server.ParseServer(block);
+				for (std::vector<int>::iterator it = server.GetPort().begin(); it != server.GetPort().end(); it++)
 				{
-					_configMultiMap.insert(std::pair<int, Server>(*it, server));
+					m_configMultiMap.insert(std::pair<int, Server>(*it, server));
 				}
 			}
 			else
@@ -103,7 +103,7 @@ void Config::parseConfig(std::string path)
 }
 
 
-std::string Config::_ignoreComment(std::string fileString)
+std::string Config::ignoreComment(std::string fileString)
 {
 	std::string::size_type pos = fileString.find("#");
 	while (pos != std::string::npos)
@@ -115,7 +115,7 @@ std::string Config::_ignoreComment(std::string fileString)
 	return fileString;
 }
 
-std::string Config::_semicolonToSpaceSemicolonSpace(std::string fileString)
+std::string Config::semicolonToSpaceSemicolonSpace(std::string fileString)
 {
 	std::string::size_type pos = fileString.find(";");
 	while (pos != std::string::npos)
@@ -126,7 +126,7 @@ std::string Config::_semicolonToSpaceSemicolonSpace(std::string fileString)
 	return fileString;
 }
 
-std::string Config::_braceToSpaceBraceSpace(std::string fileString)
+std::string Config::braceToSpaceBraceSpace(std::string fileString)
 {
 	std::string::size_type pos = fileString.find("{");
 	while (pos != std::string::npos)
@@ -143,16 +143,16 @@ std::string Config::_braceToSpaceBraceSpace(std::string fileString)
 	return fileString;
 }
 
-Server& Config::getServer(int port, std::string serverName)
+Server& Config::GetServer(int port, std::string serverName)
 {
-	std::multimap<int, Server>::iterator it = _configMultiMap.find(port);
-	if (it == _configMultiMap.end())
+	std::multimap<int, Server>::iterator it = m_configMultiMap.find(port);
+	if (it == m_configMultiMap.end())
 	{
 		throw std::runtime_error("Error: server not found");
 	}
-	while (it != _configMultiMap.end() && it->first == port)
+	while (it != m_configMultiMap.end() && it->first == port)
 	{
-		for (std::vector<std::string>::iterator it2 = it->second.getServerName().begin(); it2 != it->second.getServerName().end(); it2++)
+		for (std::vector<std::string>::iterator it2 = it->second.GetServerName().begin(); it2 != it->second.GetServerName().end(); it2++)
 		{
 			if (*it2 == serverName)
 			{
@@ -161,14 +161,14 @@ Server& Config::getServer(int port, std::string serverName)
 		}
 		it++;
 	}
-	it = _configMultiMap.find(port);
+	it = m_configMultiMap.find(port);
 	return it->second;
 }
 
-std::vector<int> Config::getPorts()
+std::vector<int> Config::GetPorts()
 {
 	std::vector<int> ports;
-	for (std::multimap<int, Server>::iterator it = _configMultiMap.begin(); it != _configMultiMap.end(); it++)
+	for (std::multimap<int, Server>::iterator it = m_configMultiMap.begin(); it != m_configMultiMap.end(); it++)
 	{
 		if (std::find(ports.begin(), ports.end(), it->first) == ports.end())
 			ports.push_back(it->first);

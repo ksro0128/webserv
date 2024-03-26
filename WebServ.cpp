@@ -2,16 +2,16 @@
 
 WebServ::WebServ(std::string configPath)
 {
-	m_config.parseConfig(configPath);
+	m_config.ParseConfig(configPath);
 
 	m_kq = kqueue();
-	m_requestProcessor.set(m_config, m_kq);
+	m_requestProcessor.Set(m_config, m_kq);
 	if (m_kq == -1)
 	{
 		throw std::runtime_error("kqueue() error");
 	}
 	m_servSocks.clear();
-	m_ports = m_config.getPorts();
+	m_ports = m_config.GetPorts();
 
 	struct kevent ev_set;
 	for (std::vector<int>::iterator it = m_ports.begin(); it != m_ports.end(); ++it)
@@ -68,7 +68,7 @@ void WebServ::RunServer()
 			}
 		}
 		// vector 받아서 실행 -> 실행상태 반환
-		m_requestProcessor.processRequests(m_document);
+		m_requestProcessor.ProcessRequests(m_document);
 		//wait 해야함
 
 		// response 보내기
