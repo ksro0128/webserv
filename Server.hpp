@@ -39,7 +39,6 @@ class Server
 		bool m_rootFlag;
 		bool m_indexFlag;
 		bool m_methodFlag;
-		bool m_errorPageFlag;
 		bool m_limitBodySizeFlag;
 		bool m_cgiFlag;
 		bool m_locationFlag;

@@ -7,7 +7,6 @@ Server::Server()
 	m_rootFlag = false;
 	m_indexFlag = false;
 	m_methodFlag = false;
-	m_errorPageFlag = false;
 	m_locationFlag = false;
 	m_limitBodySizeFlag = false;
 	m_cgiFlag = false;
@@ -18,7 +17,10 @@ Server::Server()
 	m_method.push_back("GET");
 	m_method.push_back("POST");
 	m_method.push_back("DELETE");
-	m_errorPage[400] = "./errorpage/400.html";
+	m_errorPage[400] = "./default/errorpage/400.html";
+	m_errorPage[401] = "./default/errorpage/401.html";
+	m_errorPage[403] = "./default/errorpage/403.html";
+	m_errorPage[404] = "./default/errorpage/404.html";
 	m_location.push_back(Location());
 	m_limitBodySize = 1000000;
 	m_cgi.clear();
@@ -38,7 +40,6 @@ Server& Server::operator=(const Server& rhs)
 	m_rootFlag = rhs.m_rootFlag;
 	m_indexFlag = rhs.m_indexFlag;
 	m_methodFlag = rhs.m_methodFlag;
-	m_errorPageFlag = rhs.m_errorPageFlag;
 	m_locationFlag = rhs.m_locationFlag;
 	m_limitBodySizeFlag = rhs.m_limitBodySizeFlag;
 	m_cgiFlag = rhs.m_cgiFlag;
@@ -352,11 +353,6 @@ void Server::parseMethod(std::istringstream& issLine)
 
 void Server::parseErrorPage(std::istringstream& issLine)
 {
-	if (!m_errorPageFlag)
-	{
-		m_errorPageFlag = true;
-		m_errorPage.clear();
-	}
 	std::string token;
 	if (!(issLine >> token))
 		throw std::runtime_error("error_page directive is invalid\n");

@@ -65,25 +65,42 @@ void RequestProcessor::processRequest(Request &request, Document &document)
 
 	if (server.GetCgiFlag() == false) // 정적
 	{
+		// 서버가 지원하는 method 인지 확인
+
+		// request의 method가 서버가 지원하는 method인지 확인
+		// 서버가 지원하는 method가 아니면 405 보내기
+		// 서버가 지원하는 method일 때 그게 get head만 가능 아니면 405 보내기
 		if (request.GetMethod() != "GET")
 		{
 			// 405 보내기
 			return ;
 		}
 		Response response;
-		response.SetVersion(request.GetVersion());
-		response.SetStatusCode(200);
-		response.SetStatusMessage("OK");
-		response.SetHeader("Content-Type", "text/html");
-		response.SetOriginFd(request.GetFd());
 		std::string path = server.GetRoot() + request.GetPath();
 		std::ifstream ifs(path);
+		response.SetVersion(request.GetVersion());
+		response.SetHeader("Content-Type", "text/html");
+		response.SetOriginFd(request.GetFd());
 		if (ifs.is_open() == false)
 		{
 			// 404 보내기
-			std::cout << "404" << std::endl;
+			response.SetStatusCode(404);
+			response.SetStatusMessage(m_statusMessageSet[404]);
+			std::map<int, std::string> &errorPage = server.GetErrorPage();
+			std::string errorPath = errorPage[404];
+			std::ifstream ifs(errorPath);
+			std::ostringstream oss;
+			oss << ifs.rdbuf();
+			response.SetBody(oss.str());
+			document.PutResponse(response);
+			// std::cout << "404" << std::endl;
+			struct kevent ev;
+			EV_SET(&ev, request.GetFd(), EVFILT_WRITE, EV_ADD, 0, 0, NULL);
+			kevent(m_kq, &ev, 1, NULL, 0, NULL);
 			return ;
 		}
+		response.SetStatusCode(200);
+		response.SetStatusMessage("OK");
 		std::ostringstream oss;
 		oss << ifs.rdbuf();
 		response.SetBody(oss.str());
@@ -92,14 +109,15 @@ void RequestProcessor::processRequest(Request &request, Document &document)
 		EV_SET(&ev, request.GetFd(), EVFILT_WRITE, EV_ADD, 0, 0, NULL);
 		kevent(m_kq, &ev, 1, NULL, 0, NULL);
 
-
-
-
 		// std::string res = response.GetResponse();
 		// std::cout << res << std::endl;
 	}
 	else // 동적
 	{
+		// 서버에서 지원하는 cgi 뽑기
+		// request path가 cgi확장자가 있는지 확인
+		// cgi 확장자가 있으면 cgi 실행
+		// 없으면 정적 파일 처리 (위와 동일)
 		std::vector<std::vector<std::string> > &cgi = server.GetCgi();
 		std::vector<std::vector<std::string> >::iterator it = cgi.begin();
 		for (; it != cgi.end(); it++)
