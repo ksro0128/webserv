@@ -31,7 +31,7 @@ void RequestMaker::makeRequest(Document &doc, int fd)
     std::string buff(buf);
     if (bytes == 0)
     {
-        doc.removeIncomplete(fd);
+        doc.RemoveIncomplete(fd);
         if (close(fd) < 0)
             throw std::runtime_error("close error");
         std::cout << "Connection closed" << std::endl;
@@ -39,17 +39,17 @@ void RequestMaker::makeRequest(Document &doc, int fd)
     }
     else if (bytes < 0)
     {
-        doc.removeIncomplete(fd);
+        doc.RemoveIncomplete(fd);
         if (close(fd) < 0)
             throw std::runtime_error("close error");
         std::cout << "read error" << std::endl;
         throw std::runtime_error("read error");
     }
-    doc.getIncomplete(fd).parseRequest(fd,buff);
-    if (doc.getIncomplete(fd).isComplete())
+    doc.GetIncomplete(fd).ParseRequest(fd,buff);
+    if (doc.GetIncomplete(fd).IsComplete())
     {
-        doc.putComplete(doc.getIncomplete(fd));
-        doc.getIncomplete(fd).printRequest();
-        doc.removeIncomplete(fd);
+        doc.PutComplete(doc.GetIncomplete(fd));
+        doc.GetIncomplete(fd).PrintRequest();
+        doc.RemoveIncomplete(fd);
     }
 }

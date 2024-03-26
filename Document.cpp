@@ -10,71 +10,81 @@ Document::~Document()
 }
 Document::Document(const Document& r)
 {
-    _incomplete = r._incomplete;
-    _complete = r._complete;
-    _excute = r._excute;
+    m_incomplete = r.m_incomplete;
+    m_complete = r.m_complete;
+    m_excute = r.m_excute;
 }
 Document& Document::operator=(const Document& r)
 {
     if (this != &r)
     {
-        _incomplete = r._incomplete;
-        _complete = r._complete;
-        _excute = r._excute;
+        m_incomplete = r.m_incomplete;
+        m_complete = r.m_complete;
+        m_excute = r.m_excute;
     }
     return *this;
 }
-void Document::putIncomplete(int fd, Request& req)
+void Document::PutIncomplete(int fd, Request& req)
 {
-    _incomplete[fd] = req;
+    m_incomplete[fd] = req;
 }
-void Document::removeIncomplete(int fd)
+void Document::RemoveIncomplete(int fd)
 {
-    if (_incomplete.find(fd) != _incomplete.end())
-        _incomplete.erase(fd);
+    if (m_incomplete.find(fd) != m_incomplete.end())
+        m_incomplete.erase(fd);
 }
-Request& Document::getIncomplete(int fd)
+Request& Document::GetIncomplete(int fd)
 {
-    return _incomplete[fd];
+    return m_incomplete[fd];
 }
-void Document::putComplete(Request& req)
+void Document::PutComplete(Request& req)
 {
-    _complete.push_back(req);
+    m_complete.push_back(req);
 }
-void Document::removeComplete(int fd)
+void Document::RemoveComplete(int fd)
 {
-    if (_complete.empty())
+    if (m_complete.empty())
         throw std::runtime_error("empty complete list");
-    for (std::vector<Request>::iterator it = _complete.begin(); it != _complete.end(); it++)
+    for (std::vector<Request>::iterator it = m_complete.begin(); it != m_complete.end(); it++)
     {
-        if (it->getFd() == fd)
+        if (it->GetFd() == fd)
         {
-            _complete.erase(it);
+            m_complete.erase(it);
             break ;
         }
     }
 }
-std::vector<Request>& Document::getComplete()
+std::vector<Request>& Document::GetComplete()
 {
-	return _complete;
+	return m_complete;
 }
 
-void Document::putExcute(int pid, Request& req)
+void Document::PutExcute(int pid, Request& req)
 {
-    if (_excute.find(pid) != _excute.end())
-        _excute[pid] = req;
+    if (m_excute.find(pid) != m_excute.end())
+        m_excute[pid] = req;
     else
-        _excute.insert(std::pair<int, Request>(pid, req));
+        m_excute.insert(std::pair<int, Request>(pid, req));
 }
-void Document::removeExcute(int pid)
+void Document::RemoveExcute(int pid)
 {
-    if (_excute.find(pid) != _excute.end())
-        _excute.erase(pid);
+    if (m_excute.find(pid) != m_excute.end())
+        m_excute.erase(pid);
 }
-Request& Document::getExcute(int pid)
+Request& Document::GetExcute(int pid)
 {
-    if (_excute.find(pid) != _excute.end())
-        return _excute[pid];
+    if (m_excute.find(pid) != m_excute.end())
+        return m_excute[pid];
     else
         throw std::runtime_error("no such pid");
+}
+
+void Document::PutResponse(Response& res)
+{
+    m_response.push_back(res);
+}
+
+std::vector<Response>& Document::GetResponse()
+{
+    return m_response;
 }

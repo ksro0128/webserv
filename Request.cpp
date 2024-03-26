@@ -2,21 +2,21 @@
 #include "include.hpp"
 
 
-Request::Request() : _status(0) 
+Request::Request() : m_status(0) 
 {
-    _buff.reserve(1024);
-    _remain = "";
-    _status = 200;
-    _req_close = 0;
-    _eof = 0;
-    _body_limit = 100000;
-    _read_body_len = 0;
-    _req_body_len = 0;
-    _stage = 0;
-    _chunked = 0;
-    _complete = 0;
-    _startline_cnt = 0;
-    _end = 0;
+    m_buff.reserve(1024);
+    m_remain = "";
+    m_status = 200;
+    m_reqClose = 0;
+    m_eof = 0;
+    m_bodyLimit = 100000;
+    m_readBodyLen = 0;
+    m_reqBodyLen = 0;
+    m_stage = 0;
+    m_chunked = 0;
+    m_complete = 0;
+    m_startline_cnt = 0;
+    m_end = 0;
 }
 
 Request::~Request() {}
@@ -32,28 +32,28 @@ Request& Request::operator=(const Request& r)
 {
     if (this == &r)
         return *this;
-    _buff = r._buff;
-    _method = r._method;
-    _path = r._path;
-    _version = r._version;
-    _headers = r._headers;
-    _body = r._body;
-    _remain = r._remain;
-    _host = r._host;
-    _status = r._status;
-    _origin_fd = r._origin_fd;
-    _host_port = r._host_port;
-    _startline_cnt = r._startline_cnt;
-    _req_close = r._req_close;
-    _read_body_len = r._read_body_len;
-    _req_body_len = r._req_body_len;
-    _body_limit = r._body_limit;
-    _content_length = r._content_length;
-    _chunked = r._chunked;
-    _eof = r._eof;
-    _stage = r._stage;
-    _complete = r._complete;
-    _end = r._end;
+    m_buff = r.m_buff;
+    m_method = r.m_method;
+    m_path = r.m_path;
+    m_version = r.m_version;
+    m_headers = r.m_headers;
+    m_body = r.m_body;
+    m_remain = r.m_remain;
+    m_host = r.m_host;
+    m_status = r.m_status;
+    m_origin_fd = r.m_origin_fd;
+    m_host_port = r.m_host_port;
+    m_startline_cnt = r.m_startline_cnt;
+    m_reqClose = r.m_reqClose;
+    m_readBodyLen = r.m_readBodyLen;
+    m_reqBodyLen = r.m_reqBodyLen;
+    m_bodyLimit = r.m_bodyLimit;
+    m_contentLength = r.m_contentLength;
+    m_chunked = r.m_chunked;
+    m_eof = r.m_eof;
+    m_stage = r.m_stage;
+    m_complete = r.m_complete;
+    m_end = r.m_end;
     return *this;
 }
 
@@ -63,29 +63,29 @@ void Request::parseStartline(const std::string& s)
     unsigned long         pos;
     int                   len1 = 0, len2 = 0;
 
-    if (_startline_cnt == 0 && (pos = s.find(" ")) != std::string::npos)
+    if (m_startline_cnt == 0 && (pos = s.find(" ")) != std::string::npos)
     {
-        _method = s.substr(0, pos);
-        len1 = _method.length();
-        if (!checkMethod(_method) && _status == 0)
-            _status = 501;
-        _startline_cnt++;
+        m_method = s.substr(0, pos);
+        len1 = m_method.length();
+        if (!checkMethod(m_method) && m_status == 0)
+            m_status = 501;
+        m_startline_cnt++;
     }
-    if (_startline_cnt == 1 && (pos = s.find(" ", len1 + 1)) != std::string::npos)
+    if (m_startline_cnt == 1 && (pos = s.find(" ", len1 + 1)) != std::string::npos)
     {
-        _path = s.substr(len1 + 1, pos - len1 - 1);
-        len2 = _path.length();
-        _startline_cnt++;
+        m_path = s.substr(len1 + 1, pos - len1 - 1);
+        len2 = m_path.length();
+        m_startline_cnt++;
     }
-    if (_startline_cnt == 2 && (pos = s.find("\r\n", len1 + len2 + 2)) != std::string::npos)
+    if (m_startline_cnt == 2 && (pos = s.find("\r\n", len1 + len2 + 2)) != std::string::npos)
     {
-        _version = s.substr(len1 + len2 + 2, pos - len1 - len2 - 2);
-        if (!checkVersion(_version) && _status == 0)
-            _status = 505;
-        _startline_cnt++;
+        m_version = s.substr(len1 + len2 + 2, pos - len1 - len2 - 2);
+        if (!checkVersion(m_version) && m_status == 0)
+            m_status = 505;
+        m_startline_cnt++;
     }
-    if (_startline_cnt == 3)
-        _stage = 1;
+    if (m_startline_cnt == 3)
+        m_stage = 1;
 }
 
 void Request::parseHeader(const std::string& s) 
@@ -96,8 +96,8 @@ void Request::parseHeader(const std::string& s)
 
     if (s == "\r\n")
     {
-        _stage = 2;
-        checkEseential();
+        m_stage = 2;
+        checkEssential();
         return ;
     }
     if ((pos = s.find(":")) != std::string::npos)
@@ -106,64 +106,61 @@ void Request::parseHeader(const std::string& s)
         key_len = key.length();
         for (int i = 0; i < key_len; i++)
             key[i] = std::tolower(key[i]);
-        if (!check_key(key) && _status == 0)
+        if (!check_key(key) && m_status == 0)
         {
             std::cout << "key check error\n";
-            _status = 400;
-            _req_close = 1;
+            m_status = 400;
+            m_reqClose = 1;
         }
         value = s.substr(pos + 1, s.length() - key_len - 3);
         if (value == "")
         {
             std::cout << "value is empty\n";
-            _status = 400;
-            _req_close = 1;
+            m_status = 400;
+            m_reqClose = 1;
         }
         remove_ows(value);
-        _headers.insert(std::pair<std::string, std::string>(key, value));
+        m_headers.insert(std::pair<std::string, std::string>(key, value));
     }
     else
     {
         std::cout << "header parsing error\n";
-        _status = 400;
-        _req_close = 1;
+        m_status = 400;
+        m_reqClose = 1;
     }
 }
 
-void Request::parseRequest(int fd, std::string& buff) 
+void Request::ParseRequest(int fd, std::string& buff) 
 {
     std::string tmp;
-    int  start,end;
+    int  start;
     int  tmp_len;
     int  total_len;
 
-    static int i = 0;
-    i++;
-    _origin_fd = fd;
+    m_origin_fd = fd;
     start = 0;
-    end = 0;
     tmp = buff;
-    _buff = tmp;
-    if (_remain.length() > 0)
+    m_buff = tmp;
+    if (m_remain.length() > 0)
     {
-        _buff = _remain + _buff;
-        _remain = "";
+        m_buff = m_remain + m_buff;
+        m_remain = "";
     }
-    total_len = _buff.length();
-    while (_stage < 2 && (tmp = getLine(start, _buff)) != "")
+    total_len = m_buff.length();
+    while (m_stage < 2 && (tmp = getLine(start, m_buff)) != "")
     {
         tmp_len = tmp.length();
         start += tmp_len;
-        if (tmp.find("\r\n") == std::string::npos || _end == 1)
+        if (tmp.find("\r\n") == std::string::npos || m_end == 1)
         {
-            _remain += tmp;
+            m_remain += tmp;
             // std::cout << "\n\n\nremain!\n";
-            // std::cout << _remain << std::endl;
+            // std::cout << m_remain << std::endl;
             // std::cout << "\n\n";
-            // std::cout << "_buff is " << _buff << "\n\n";
+            // std::cout << "m_buff is " << m_buff << "\n\n";
             break;
         }
-        switch (_stage)
+        switch (m_stage)
         {
             case 0:
                 parseStartline(tmp);
@@ -175,41 +172,41 @@ void Request::parseRequest(int fd, std::string& buff)
                 break;
         }
     }
-    if (_stage == 2 && _end == 0)
+    if (m_stage == 2 && m_end == 0)
     {
-        if (_req_body_len <= total_len - start)
+        if (m_reqBodyLen <= total_len - start)
         {
-            _body += _buff.substr(start, _req_body_len);
-            _remain = _buff.substr(start + _req_body_len, total_len - start - _req_body_len);
-            _read_body_len += _req_body_len;
-            _req_body_len = 0;
-            _end = 1;
-            _complete = 1;
+            m_body += m_buff.substr(start, m_reqBodyLen);
+            m_remain = m_buff.substr(start + m_reqBodyLen, total_len - start - m_reqBodyLen);
+            m_readBodyLen += m_reqBodyLen;
+            m_reqBodyLen = 0;
+            m_end = 1;
+            m_complete = 1;
         }
         else
         {
-            _body += _buff.substr(start, total_len - start);
-            _read_body_len += total_len - start;
-            _req_body_len -= total_len - start;
+            m_body += m_buff.substr(start, total_len - start);
+            m_readBodyLen += total_len - start;
+            m_reqBodyLen -= total_len - start;
         }
     }
-    if (end == 1)
-        _remain += _buff.substr(start, total_len - start);
+    if (m_end == 1)
+        m_remain += m_buff.substr(start, total_len - start);
 }
 
-void Request::printRequest() 
+void Request::PrintRequest() 
 {
-    std::cout << "Request " << "error:" << _status << "{" << std::endl;
-    std::cout << "Method : <" << _method << ">" << std::endl;
-    std::cout << "Path : <" << _path << ">" << std::endl;
-    std::cout << "Version : <" << _version << ">" << std::endl;
+    std::cout << "Request " << "error:" << m_status << "{" << std::endl;
+    std::cout << "Method : <" << m_method << ">" << std::endl;
+    std::cout << "Path : <" << m_path << ">" << std::endl;
+    std::cout << "Version : <" << m_version << ">" << std::endl;
     std::cout << "Headers{" << std::endl;
-    for (std::multimap<std::string, std::string>::iterator it = _headers.begin(); it != _headers.end(); it++)
+    for (std::multimap<std::string, std::string>::iterator it = m_headers.begin(); it != m_headers.end(); it++)
     {
         std::cout << it->first << " : " << it->second << std::endl;
     }
     std::cout << "}" << std::endl;
-    std::cout << "Body : " << _body << std::endl;
+    std::cout << "Body : " << m_body << std::endl;
     std::cout << "}" << std::endl;
 }
 
@@ -258,93 +255,93 @@ void Request::remove_ows(std::string& s)
         s = s.substr(i, j - i + 1);
 }
 
-void Request::checkEseential() 
+void Request::checkEssential() 
 {
     std::string tmp, hostport;
-    if ((_method == "GET" || _method == "HEAD"))
+    if ((m_method == "GET" || m_method == "HEAD"))
     {
-        if (_headers.find("content-length") != _headers.end())
+        if (m_headers.find("content-length") != m_headers.end())
         {
-            _status = 400;
+            m_status = 400;
             std::cout << "GET or HEAD method should not have content-length\n";
-            _req_body_len = 0;
-            _req_close = 1;
+            m_reqBodyLen = 0;
+            m_reqClose = 1;
         }
         else
         {
-            _req_body_len = 0;
-            _complete = 1;
+            m_reqBodyLen = 0;
+            m_complete = 1;
         }
-        _end = 1;
+        m_end = 1;
     }
-    else if (_headers.find("host") == _headers.end() || _headers.find("host")->second == "" || _headers.count("host") > 1)
+    else if (m_headers.find("host") == m_headers.end() || m_headers.find("host")->second == "" || m_headers.count("host") > 1)
     {
-        _status = 400;
+        m_status = 400;
         std::cout << "Host header is missing or invalid\n";
-        _req_close = 1;
-        _end = 1;
+        m_reqClose = 1;
+        m_end = 1;
     }
     else
     {
-        if (_headers.find("content-length") == _headers.end())
+        if (m_headers.find("content-length") == m_headers.end())
         {
-            _status = 400;
+            m_status = 400;
             std::cout << "Content-Length header is missing\n";
-            _req_close = 1;
-            _end = 1;
+            m_reqClose = 1;
+            m_end = 1;
         }
         else
         {
-            tmp = _headers.find("content-length")->second;
-            if (isNumber(_headers.find("content-length")->second) == 0)
+            tmp = m_headers.find("content-length")->second;
+            if (isNumber(m_headers.find("content-length")->second) == 0)
             {
-                _status = 400;
+                m_status = 400;
                 std::cout << "Content-Length header is not a number\n";
-                _req_close = 1;
-                _end = 1;
+                m_reqClose = 1;
+                m_end = 1;
             }
             else
             {
-                _content_length = atoi(tmp.c_str());
-                _req_body_len = _content_length;
-                if (_content_length < 0 || _content_length > _body_limit || _headers.count("content-length") > 1)
+                m_contentLength = atoi(tmp.c_str());
+                m_reqBodyLen = m_contentLength;
+                if (m_contentLength < 0 || m_contentLength > m_bodyLimit || m_headers.count("content-length") > 1)
                 {
-                    _status = 400;
+                    m_status = 400;
                     std::cout << "Content-Length header is invalid\n";
-                    _req_close = 1;
-                    _end = 1;
+                    m_reqClose = 1;
+                    m_end = 1;
                 }
             }
         }
         unsigned long pos;
-        tmp = _headers.find("host")->second;
+        tmp = m_headers.find("host")->second;
         if (pos = tmp.find(":"), pos != std::string::npos)
         {
-            _host = tmp.substr(0, pos);
+            m_host = tmp.substr(0, pos);
             hostport = tmp.substr(pos + 1, tmp.length() - pos - 1);
             if (isNumber(hostport) == 0)
             {
-                _status = 400;
+                m_status = 400;
                 std::cout << "Port number is not a number\n";
-                _req_close = 1;
-                _end = 1;
+                m_reqClose = 1;
+                m_end = 1;
             }
             else
             {
-                _host_port = atoi(hostport.c_str());
-                if (_host_port < 0 || _host_port > 65535 || errno == ERANGE)
+                m_host_port = atoi(hostport.c_str());
+                if (m_host_port < 0 || m_host_port > 65535 || errno == ERANGE)
                 {
-                    _status = 400;
+                    m_status = 400;
                     std::cout << "Port number is invalid\n";
-                    _req_close = 1;
-                    _end = 1;
+                    m_reqClose = 1;
+                    m_end = 1;
                 }
             }
         }
         else
         {
-            _host = tmp;
-            _host_port = 80;
+            m_host = tmp;
+            m_host_port = 80;
         }
     }
 }
@@ -377,59 +374,59 @@ std::string Request::getLine(int start, std::string& s)
         return (s.substr(start, s.length() - start));
 }
 
-int Request::getFd() 
+int Request::GetFd() 
 {
-    return (_origin_fd);
+    return (m_origin_fd);
 }
 
-int Request::isComplete() 
+int Request::IsComplete() 
 {
-    return (_complete);
+    return (m_complete);
 }
 
-std::multimap<std::string, std::string>& Request::getHeaders() 
+std::multimap<std::string, std::string>& Request::GetHeaders() 
 {
-    return (_headers);
+    return (m_headers);
 }
 
-std::string& Request::getSpecificHeader(const std::string& key) 
+std::string& Request::GetSpecificHeader(const std::string& key) 
 {
-    if (_headers.find(key) == _headers.end())
+    if (m_headers.find(key) == m_headers.end())
         throw std::runtime_error("Header not found");
-    return (_headers.find(key)->second);
+    return (m_headers.find(key)->second);
 }
 
-std::string& Request::getMethod() 
+std::string& Request::GetMethod() 
 {
-    return (_method);
+    return (m_method);
 }
 
-std::string& Request::getPath() 
+std::string& Request::GetPath() 
 {
-    return (_path);
+    return (m_path);
 }
 
-std::string& Request::getVersion() 
+std::string& Request::GetVersion() 
 {
-    return (_version);
+    return (m_version);
 }
 
-std::string& Request::getBody() 
+std::string& Request::GetBody() 
 {
-    return (_body);
+    return (m_body);
 }
 
-std::string& Request::getHost() 
+std::string& Request::GetHost() 
 {
-    return (_host);
+    return (m_host);
 }
 
-int Request::getPort() 
+int Request::GetPort() 
 {
-    return (_host_port);
+    return (m_host_port);
 }
 
-int Request::getStatus() 
+int Request::GetStatus() 
 {
-    return (_status);
+    return (m_status);
 }

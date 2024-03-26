@@ -20,7 +20,7 @@ void RequestProcessor::set(Config &config, int kq)
 
 void RequestProcessor::processRequests(Document &document)
 {
-	std::vector<Request> &complete = document.getComplete();
+	std::vector<Request> &complete = document.GetComplete();
 	
 	for (std::vector<Request>::iterator it = complete.begin(); it != complete.end(); it++)
 	{
@@ -31,5 +31,5 @@ void RequestProcessor::processRequests(Document &document)
 
 void RequestProcessor::processRequest(Request &request)
 {
-	request.getBody();
+	request.GetBody();
 }
