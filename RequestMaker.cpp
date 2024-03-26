@@ -49,7 +49,7 @@ void RequestMaker::makeRequest(Document &doc, int fd)
     if (doc.GetIncomplete(fd).IsComplete())
     {
         doc.PutComplete(doc.GetIncomplete(fd));
-        doc.GetIncomplete(fd).PrintRequest();
+        // doc.GetIncomplete(fd).PrintRequest();
         doc.RemoveIncomplete(fd);
     }
 }

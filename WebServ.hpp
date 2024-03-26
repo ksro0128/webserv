@@ -4,7 +4,7 @@
 #include "Document.hpp"
 #include "RequestMaker.hpp"
 #include "RequestProcessor.hpp"
-
+#include "ResponseSender.hpp"
 
 class WebServ
 {
@@ -19,6 +19,7 @@ class WebServ
 		Document m_document;
 		RequestMaker m_requestMaker;
 		RequestProcessor m_requestProcessor;
+		ResponseSender m_responseSender;
 		Config m_config;
 		std::vector<int> m_servSocks;
 		std::vector<int> m_ports;

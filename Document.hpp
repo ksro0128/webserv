@@ -11,15 +11,19 @@ public:
     ~Document();
     Document(const Document& r);
     Document& operator=(const Document& r);
+
     void PutIncomplete(int fd, Request& req);
     void RemoveIncomplete(int fd);
     Request& GetIncomplete(int fd); // 반환받을 일이 있다면 참조로반환받고 밖에서 삭제해주는것이 맞나?
+
     void PutComplete(Request& req);
-    void RemoveComplete(int fd);
+    void RemoveComplete();
     std::vector<Request>& GetComplete(); // 이것도 ㅇㅇ
+
     void PutExcute(int pid, Request& req);
     void RemoveExcute(int pid);
     Request& GetExcute(int pid); // 이것도 ㅇㅇ
+	
     void PutResponse(Response& res);
     std::vector<Response>& GetResponse();
 private:

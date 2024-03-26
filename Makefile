@@ -8,7 +8,8 @@ SRCS = main.cpp \
 	   RequestMaker.cpp \
 	   Document.cpp \
 	   Response.cpp \
-	   RequestProcessor.cpp
+	   RequestProcessor.cpp \
+	   ResponseSender.cpp
 OBJS = $(SRCS:.cpp=.o)
 CC = c++
 TARGET = webserv

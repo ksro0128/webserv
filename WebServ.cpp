@@ -6,6 +6,7 @@ WebServ::WebServ(std::string configPath)
 
 	m_kq = kqueue();
 	m_requestProcessor.Set(m_config, m_kq);
+	m_responseSender.Set(m_config, m_kq);
 	if (m_kq == -1)
 	{
 		throw std::runtime_error("kqueue() error");
@@ -64,7 +65,8 @@ void WebServ::RunServer()
 			}
 			else if (ev_list[i].filter == EVFILT_WRITE) // write 이벤트
 			{
-				// response 보내기	
+				// response 보내기
+				m_responseSender.SendResponses(m_document);
 			}
 		}
 		// vector 받아서 실행 -> 실행상태 반환

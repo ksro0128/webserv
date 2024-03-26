@@ -19,6 +19,7 @@ Response::Response(const Response& rhs)
 	m_statusMessage = rhs.m_statusMessage;
 	m_headers = rhs.m_headers;
 	m_body = rhs.m_body;
+	m_origin_fd = rhs.m_origin_fd;
 }
 
 Response& Response::operator=(const Response& rhs)
@@ -30,6 +31,7 @@ Response& Response::operator=(const Response& rhs)
 	m_statusMessage = rhs.m_statusMessage;
 	m_headers = rhs.m_headers;
 	m_body = rhs.m_body;
+	m_origin_fd = rhs.m_origin_fd;
 	return *this;
 }
 
@@ -56,6 +58,11 @@ void Response::SetHeader(std::string key, std::string value)
 void Response::SetBody(std::string body)
 {
 	m_body = body;
+}
+
+void Response::SetOriginFd(int origin_fd)
+{
+	m_origin_fd = origin_fd;
 }
 
 std::string Response::GetVersion()
@@ -121,4 +128,9 @@ std::string Response::intToString(int n)
 	ss << n;
 	ss >> str;
 	return str;
+}
+
+int Response::GetOriginFd()
+{
+	return m_origin_fd;
 }

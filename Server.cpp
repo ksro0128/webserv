@@ -504,7 +504,7 @@ std::vector<Location>& Server::GetLocation()
 
 void Server::parseCgi(std::istringstream& issLine)
 {
-	if (m_cgiFlag)
+	if (!m_cgiFlag)
 		m_cgiFlag = true;
 	std::string token;
 	std::vector<std::string> cgi;

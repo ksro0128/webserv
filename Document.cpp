@@ -41,18 +41,9 @@ void Document::PutComplete(Request& req)
 {
     m_complete.push_back(req);
 }
-void Document::RemoveComplete(int fd)
+void Document::RemoveComplete()
 {
-    if (m_complete.empty())
-        throw std::runtime_error("empty complete list");
-    for (std::vector<Request>::iterator it = m_complete.begin(); it != m_complete.end(); it++)
-    {
-        if (it->GetFd() == fd)
-        {
-            m_complete.erase(it);
-            break ;
-        }
-    }
+    m_complete.clear();
 }
 std::vector<Request>& Document::GetComplete()
 {

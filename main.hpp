@@ -10,3 +10,4 @@
 #include "RequestMaker.hpp"
 #include "RequestProcessor.hpp"
 #include "Response.hpp"
+#include "ResponseSender.hpp"

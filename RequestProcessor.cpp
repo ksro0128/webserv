@@ -48,12 +48,66 @@ void RequestProcessor::ProcessRequests(Document &document)
 	
 	for (std::vector<Request>::iterator it = complete.begin(); it != complete.end(); it++)
 	{
-		processRequest(*it);
-		std::cout << "Request processed" << std::endl;
+		processRequest(*it, document);
 	}
+	document.RemoveComplete();
 }
 
-void RequestProcessor::processRequest(Request &request)
+void RequestProcessor::processRequest(Request &request, Document &document)
 {
-	request.GetBody();
+	if (request.GetStatus() != 200)
+	{
+		return ;
+	}
+	std::string server_name = request.GetHost();
+	int port = request.GetPort();
+	Server &server = m_config.GetServer(port, server_name);
+
+	if (server.GetCgiFlag() == false) // 정적
+	{
+		if (request.GetMethod() != "GET")
+		{
+			// 405 보내기
+			return ;
+		}
+		Response response;
+		response.SetVersion(request.GetVersion());
+		response.SetStatusCode(200);
+		response.SetStatusMessage("OK");
+		response.SetHeader("Content-Type", "text/html");
+		response.SetOriginFd(request.GetFd());
+		std::string path = server.GetRoot() + request.GetPath();
+		std::ifstream ifs(path);
+		if (ifs.is_open() == false)
+		{
+			// 404 보내기
+			std::cout << "404" << std::endl;
+			return ;
+		}
+		std::ostringstream oss;
+		oss << ifs.rdbuf();
+		response.SetBody(oss.str());
+		document.PutResponse(response);
+		struct kevent ev;
+		EV_SET(&ev, request.GetFd(), EVFILT_WRITE, EV_ADD, 0, 0, NULL);
+		kevent(m_kq, &ev, 1, NULL, 0, NULL);
+
+
+
+
+		// std::string res = response.GetResponse();
+		// std::cout << res << std::endl;
+	}
+	else // 동적
+	{
+		std::vector<std::vector<std::string> > &cgi = server.GetCgi();
+		std::vector<std::vector<std::string> >::iterator it = cgi.begin();
+		for (; it != cgi.end(); it++)
+		{
+			if (request.GetPath().find((*it)[0]) != std::string::npos)
+			{
+				break ;
+			}
+		}
+	}
 }

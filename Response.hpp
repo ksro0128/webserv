@@ -15,6 +15,7 @@ class Response
 		void SetStatusMessage(std::string statusMessage);
 		void SetHeader(std::string key, std::string value);
 		void SetBody(std::string body);
+		void SetOriginFd(int origin_fd);
 		
 		std::string GetVersion();
 		int GetStatusCode();
@@ -22,9 +23,11 @@ class Response
 		std::multimap<std::string, std::string> GetHeaders();
 		std::string GetBody();
 		std::string GetResponse();	
+		int GetOriginFd();
 
 	private:
 		std::string m_version;
+		int m_origin_fd;
 		int m_statusCode;
 		std::string m_statusMessage;
 		std::multimap<std::string, std::string> m_headers;

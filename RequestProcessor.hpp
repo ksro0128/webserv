@@ -18,6 +18,6 @@ class RequestProcessor
 		RequestProcessor &operator=(const RequestProcessor &src);
 		Config m_config;
 		int m_kq;
-		void processRequest(Request &request);
+		void processRequest(Request &request, Document &document);
 		std::map<int, std::string> m_statusMessageSet;
 };
