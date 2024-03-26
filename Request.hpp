@@ -12,7 +12,7 @@ public:
     ~Request();
     Request(const Request& r);
     Request& operator=(const Request& r);
-    void parseRequest(int fd);
+    void parseRequest(int fd, std::string& buff);
     std::string&    getMethod();
     std::string&    getPath();
     std::string&    getVersion();
@@ -21,7 +21,9 @@ public:
     int             isComplete();
     void            printRequest();
     int             getFd();
+    std::string&    getHost();
     int             getPort();
+    int             getStatus();
     int             setStatus(int status);
     std::string&    getSpecificHeader(const std::string& key);
 private: //essential
@@ -32,6 +34,7 @@ private: //essential
     std::multimap<std::string, std::string> _headers;
     std::string     _body;
     std::string     _remain;
+    std::string     _host;
     int             _status;
     int             _origin_fd;
     int             _host_port;
@@ -85,3 +88,6 @@ private: //essential
 // 0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789
 // 0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789
 // 012301230123012301230123
+
+
+// host없으면?

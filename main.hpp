@@ -6,4 +6,5 @@
 #include "Config.hpp"
 #include "WebServ.hpp"
 #include "Request.hpp"
-
+#include "Document.hpp"
+#include "RequestMaker.hpp"
