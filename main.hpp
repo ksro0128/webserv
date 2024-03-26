@@ -5,4 +5,5 @@
 #include "Server.hpp"
 #include "Config.hpp"
 #include "WebServ.hpp"
+#include "Request.hpp"
 

@@ -37,42 +37,55 @@ void WebServ::runServer()
 		int nev = kevent(kq, NULL, 0, ev_list, 50, NULL);
 		for (int i = 0; i < nev; i++)
 		{
-			if (std::find(servSocks.begin(), servSocks.end(), ev_list[i].ident) != servSocks.end())
+			// if (ev_list[i].filter == EVFILT_READ && ev_list[i].flags & EV_EOF) // 연결 종료
+			// {
+			// 	close(ev_list[i].ident);
+			// 	std::cout << "connection closed" << std::endl;
+			// 	continue;
+			// }
+			// else 
+			if (ev_list[i].filter == EVFILT_READ) // read 이벤트
 			{
-				struct sockaddr_in clnt_adr;
-				socklen_t adr_sz = sizeof(clnt_adr);
-				int clntSock = accept(ev_list[i].ident, (struct sockaddr *)&clnt_adr, &adr_sz);
-				int flags = fcntl(clntSock, F_GETFL, 0);
-				flags |= O_NONBLOCK;
-				fcntl(clntSock, F_SETFL, flags);
-				EV_SET(&ev_set, clntSock, EVFILT_READ, EV_ADD, 0, 0, NULL);
-				kevent(kq, &ev_set, 1, NULL, 0, NULL);
-				std::cout << "new connection" << std::endl;
+				if (std::find(servSocks.begin(), servSocks.end(), ev_list[i].ident) != servSocks.end()) // 서버 소켓 - 새로운 연결
+				{
+					struct sockaddr_in clnt_adr;
+					socklen_t adr_sz = sizeof(clnt_adr);
+					int clntSock = accept(ev_list[i].ident, (struct sockaddr *)&clnt_adr, &adr_sz);
+					int flags = fcntl(clntSock, F_GETFL, 0);
+					flags |= O_NONBLOCK;
+					fcntl(clntSock, F_SETFL, flags);
+					EV_SET(&ev_set, clntSock, EVFILT_READ, EV_ADD, 0, 0, NULL);
+					kevent(kq, &ev_set, 1, NULL, 0, NULL);
+					std::cout << "new connection" << std::endl;
+				}
+				else // 클라이언트 소켓 - 요청 처리
+				{
+					// request 파싱
+					char buffer[1024];
+					int len = read(ev_list[i].ident, buffer, 1024);
+					if (len == -1)
+					{
+						throw std::runtime_error("read() error");
+					}
+					buffer[len] = '\0';
+					if (len == 0)
+					{
+						close(ev_list[i].ident);
+						std::cout << "connection closed" << std::endl;
+						continue;
+					}
+					std::cout << buffer << std::endl;
+					
+				}
 			}
-			else
+			else if (ev_list[i].filter == EVFILT_WRITE) // write 이벤트
 			{
-				// request 파싱
-				char buffer[1024];
-				int len = read(ev_list[i].ident, buffer, 1024);
-				if (len == -1)
-				{
-					throw std::runtime_error("read() error");
-				}
-				buffer[len] = '\0';
-				if (len == 0)
-				{
-					close(ev_list[i].ident);
-					std::cout << "connection closed" << std::endl;
-					continue;
-				}
-				std::cout << buffer << std::endl;
+				// response 보내기		
 			}
-
 		}
 		// vector 받아서 실행 -> 실행상태 반환
 
 		// response 보내기
-	
 	}
 
 	
