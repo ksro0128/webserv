@@ -8,11 +8,12 @@
 class RequestProcessor
 {
 	public:
+		RequestProcessor();
 		RequestProcessor(Config &config);
 		~RequestProcessor();
-		void processRequests(Document &document, int kq);
+		void set(Config &config, int kq);
+		void processRequests(Document &document);
 	private:
-		RequestProcessor();
 		RequestProcessor(const RequestProcessor &src);
 		RequestProcessor &operator=(const RequestProcessor &src);
 		Config _config;

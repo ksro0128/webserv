@@ -3,20 +3,31 @@
 #include "main.hpp"
 #include "Document.hpp"
 #include "RequestMaker.hpp"
+#include "RequestProcessor.hpp"
 
 
 class WebServ
 {
 	public:
-		WebServ();
 		WebServ(std::string configPath);
 		~WebServ();
-		void runServer();
+		void RunServer();
 	private:
+		WebServ();
 		WebServ(const WebServ&);
 		WebServ& operator=(const WebServ&);
-		Document _document;
-		RequestMaker _requestmaker;
-		Config _config;
+		Document m_document;
+		RequestMaker m_requestMaker;
+		RequestProcessor m_requestProcessor;
+		Config m_config;
+		std::vector<int> m_servSocks;
+		std::vector<int> m_ports;
+		int m_kq;
 		int openPort(int port);
 };
+
+///규칙
+// public 함수 앞 대문자시작 private 함수 앞 소문자시작
+// 멤버변수는 m_으로 시작
+
+// 전부다 중간 시작점은 대문자

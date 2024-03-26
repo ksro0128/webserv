@@ -3,6 +3,7 @@
 
 # include "include.hpp"
 # include "Request.hpp"
+# include "Response.hpp"
 
 class Document{
 public:
@@ -15,18 +16,18 @@ public:
     Request& getIncomplete(int fd); // 반환받을 일이 있다면 참조로반환받고 밖에서 삭제해주는것이 맞나?
     void putComplete(Request& req);
     void removeComplete(int fd);
-    Request& getComplete(int fd); // 이것도 ㅇㅇ
+    std::vector<Request>& getComplete(); // 이것도 ㅇㅇ
     void putExcute(int pid, Request& req);
     void removeExcute(int pid);
     Request& getExcute(int pid); // 이것도 ㅇㅇ
-    // void putResponse(Response& res);
-    // void removeResponse(int pid);
-    // Response& getResponse(int pid);
+    void putResponse(Response& res);
+    void removeResponse(int pid);
+    std::vector<Response>& getResponse();
 private:
     std::map<int, Request> _incomplete;
     std::vector<Request> _complete; // 실행부로 넘기는거
     std::map<int, Request> _excute; // 실행부에서 등록,삭제,확인
-    // std::vector<Response> _response;
+    std::vector<Response> _response;
 };
 
 #endif

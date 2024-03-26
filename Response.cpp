@@ -90,7 +90,7 @@ std::string Response::getResponse()
 	_headers.insert(std::pair<std::string, std::string>("Date", date));
 	_headers.insert(std::pair<std::string, std::string>("Server", "Webserv"));
 	_headers.insert(std::pair<std::string, std::string>("Content-Length", std::to_string(_body.length())));
-	_headers.insert(std::pair<std::string, std::string>("Connection", "close"));
+
 	for (std::multimap<std::string, std::string>::iterator it = _headers.begin(); it != _headers.end(); it++)
 	{
 		response += it->first + ": " + it->second + "\r\n";

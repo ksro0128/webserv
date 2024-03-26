@@ -54,17 +54,11 @@ void Document::removeComplete(int fd)
         }
     }
 }
-Request& Document::getComplete(int fd)
+std::vector<Request>& Document::getComplete()
 {
-    if (_complete.empty())
-        throw std::runtime_error("empty complete list");
-    for (std::vector<Request>::iterator it = _complete.begin(); it != _complete.end(); it++)
-    {
-        if (it->getFd() == fd)
-            return *it;
-    }
-    throw std::runtime_error("no such fd");
+	return _complete;
 }
+
 void Document::putExcute(int pid, Request& req)
 {
     if (_excute.find(pid) != _excute.end())

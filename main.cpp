@@ -16,7 +16,7 @@ int main(int argc, char **argv)
 		}
 		
 		WebServ webServ(configPath);
-		webServ.runServer();
+		webServ.RunServer();
 	}
 	catch (std::exception &e)
 	{

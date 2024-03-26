@@ -1,40 +1,39 @@
 #include "WebServ.hpp"
 
-WebServ::WebServ()
-{
-}
-
 WebServ::WebServ(std::string configPath)
 {
-	_config.parseConfig(configPath);
+	m_config.parseConfig(configPath);
+
+	m_kq = kqueue();
+	m_requestProcessor.set(m_config, m_kq);
+	if (m_kq == -1)
+	{
+		throw std::runtime_error("kqueue() error");
+	}
+	m_servSocks.clear();
+	m_ports = m_config.getPorts();
+
+	struct kevent ev_set;
+	for (std::vector<int>::iterator it = m_ports.begin(); it != m_ports.end(); ++it)
+	{
+		m_servSocks.push_back(openPort(*it));
+		EV_SET(&ev_set, m_servSocks.back(), EVFILT_READ, EV_ADD, 0, 0, NULL);
+		kevent(m_kq, &ev_set, 1, NULL, 0, NULL);
+	}
 }
 
 WebServ::~WebServ()
 {
 }
 
-void WebServ::runServer()
+void WebServ::RunServer()
 {
-	std::vector<int> servSocks;
-	std::vector<int> ports = _config.getPorts();
-	int kq = kqueue();
-	if (kq == -1)
-	{
-		throw std::runtime_error("kqueue() error");
-	}
 	struct kevent ev_set;
 	struct kevent ev_list[50];
-	
-	for (std::vector<int>::iterator it = ports.begin(); it != ports.end(); ++it)
-	{
-		servSocks.push_back(openPort(*it));
-		EV_SET(&ev_set, servSocks.back(), EVFILT_READ, EV_ADD, 0, 0, NULL);
-		kevent(kq, &ev_set, 1, NULL, 0, NULL);
-	}
 
 	while (1)
 	{
-		int nev = kevent(kq, NULL, 0, ev_list, 50, NULL);
+		int nev = kevent(m_kq, NULL, 0, ev_list, 50, NULL);
 		for (int i = 0; i < nev; i++)
 		{
 			// if (ev_list[i].filter == EVFILT_READ && ev_list[i].flags & EV_EOF) // 연결 종료
@@ -46,7 +45,7 @@ void WebServ::runServer()
 			// else 
 			if (ev_list[i].filter == EVFILT_READ) // read 이벤트
 			{
-				if (std::find(servSocks.begin(), servSocks.end(), ev_list[i].ident) != servSocks.end()) // 서버 소켓 - 새로운 연결
+				if (std::find(m_servSocks.begin(), m_servSocks.end(), ev_list[i].ident) != m_servSocks.end()) // 서버 소켓 - 새로운 연결
 				{
 					struct sockaddr_in clnt_adr;
 					socklen_t adr_sz = sizeof(clnt_adr);
@@ -55,35 +54,22 @@ void WebServ::runServer()
 					flags |= O_NONBLOCK;
 					fcntl(clntSock, F_SETFL, flags);
 					EV_SET(&ev_set, clntSock, EVFILT_READ, EV_ADD, 0, 0, NULL);
-					kevent(kq, &ev_set, 1, NULL, 0, NULL);
+					kevent(m_kq, &ev_set, 1, NULL, 0, NULL);
 					std::cout << "new connection" << std::endl;
 				}
 				else // 클라이언트 소켓 - 요청 처리
 				{
-					// request 파싱
-					// char buffer[1024];
-					// int len = read(ev_list[i].ident, buffer, 1024);
-					// if (len == -1)
-					// {
-					// 	throw std::runtime_error("read() error");
-					// }
-					// buffer[len] = '\0';
-					// if (len == 0)
-					// {
-					// 	close(ev_list[i].ident);
-					// 	std::cout << "connection closed" << std::endl;
-					// 	continue;
-					// }
-					// std::cout << buffer << std::endl;
-					_requestmaker.makeRequest(_document, ev_list[i].ident);
+					m_requestMaker.makeRequest(m_document, ev_list[i].ident);
 				}
 			}
 			else if (ev_list[i].filter == EVFILT_WRITE) // write 이벤트
 			{
-				// response 보내기		
+				// response 보내기	
 			}
 		}
 		// vector 받아서 실행 -> 실행상태 반환
+		m_requestProcessor.processRequests(m_document);
+		//wait 해야함
 
 		// response 보내기
 	}

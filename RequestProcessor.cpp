@@ -1,5 +1,9 @@
 #include "RequestProcessor.hpp"
 
+RequestProcessor::RequestProcessor()
+{
+}
+
 RequestProcessor::RequestProcessor(Config &config) : _config(config)
 {
 }
@@ -8,18 +12,24 @@ RequestProcessor::~RequestProcessor()
 {
 }
 
-void RequestProcessor::processRequests(Document &document, int kq)
+void RequestProcessor::set(Config &config, int kq)
 {
+	_config = config;
 	_kq = kq;
+}
+
+void RequestProcessor::processRequests(Document &document)
+{
 	std::vector<Request> &complete = document.getComplete();
 	
 	for (std::vector<Request>::iterator it = complete.begin(); it != complete.end(); it++)
 	{
 		processRequest(*it);
+		std::cout << "Request processed" << std::endl;
 	}
 }
 
 void RequestProcessor::processRequest(Request &request)
 {
-	
+	request.getBody();
 }
