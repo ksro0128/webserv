@@ -19,5 +19,5 @@ class RequestProcessor
 		Config m_config;
 		int m_kq;
 		void processRequest(Request &request);
-
+		std::map<int, std::string> m_statusMessageSet;
 };
