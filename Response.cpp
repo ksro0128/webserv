@@ -2,10 +2,10 @@
 
 Response::Response()
 {
-	_version = "HTTP/1.1";
-	_statusCode = 200;
-	_statusMessage = "OK";
-	_body = "";
+	m_version = "HTTP/1.1";
+	m_statusCode = 200;
+	m_statusMessage = "OK";
+	m_body = "";
 }
 
 Response::~Response()
@@ -14,89 +14,89 @@ Response::~Response()
 
 Response::Response(const Response& rhs)
 {
-	_version = rhs._version;
-	_statusCode = rhs._statusCode;
-	_statusMessage = rhs._statusMessage;
-	_headers = rhs._headers;
-	_body = rhs._body;
+	m_version = rhs.m_version;
+	m_statusCode = rhs.m_statusCode;
+	m_statusMessage = rhs.m_statusMessage;
+	m_headers = rhs.m_headers;
+	m_body = rhs.m_body;
 }
 
 Response& Response::operator=(const Response& rhs)
 {
 	if (this == &rhs)
 		return *this;
-	_version = rhs._version;
-	_statusCode = rhs._statusCode;
-	_statusMessage = rhs._statusMessage;
-	_headers = rhs._headers;
-	_body = rhs._body;
+	m_version = rhs.m_version;
+	m_statusCode = rhs.m_statusCode;
+	m_statusMessage = rhs.m_statusMessage;
+	m_headers = rhs.m_headers;
+	m_body = rhs.m_body;
 	return *this;
 }
 
-void Response::setVersion(std::string version)
+void Response::SetVersion(std::string version)
 {
-	_version = version;
+	m_version = version;
 }
 
-void Response::setStatusCode(int statusCode)
+void Response::SetStatusCode(int statusCode)
 {
-	_statusCode = statusCode;
+	m_statusCode = statusCode;
 }
 
-void Response::setStatusMessage(std::string statusMessage)
+void Response::SetStatusMessage(std::string statusMessage)
 {
-	_statusMessage = statusMessage;
+	m_statusMessage = statusMessage;
 }
 
-void Response::setHeader(std::string key, std::string value)
+void Response::SetHeader(std::string key, std::string value)
 {
-	_headers.insert(std::pair<std::string, std::string>(key, value));
+	m_headers.insert(std::pair<std::string, std::string>(key, value));
 }
 
-void Response::setBody(std::string body)
+void Response::SetBody(std::string body)
 {
-	_body = body;
+	m_body = body;
 }
 
-std::string Response::getVersion()
+std::string Response::GetVersion()
 {
-	return _version;
+	return m_version;
 }
 
-int Response::getStatusCode()
+int Response::GetStatusCode()
 {
-	return _statusCode;
+	return m_statusCode;
 }
 
-std::string Response::getStatusMessage()
+std::string Response::GetStatusMessage()
 {
-	return _statusMessage;
+	return m_statusMessage;
 }
 
-std::multimap<std::string, std::string> Response::getHeaders()
+std::multimap<std::string, std::string> Response::GetHeaders()
 {
-	return _headers;
+	return m_headers;
 }
 
-std::string Response::getBody()
+std::string Response::GetBody()
 {
-	return _body;
+	return m_body;
 }
 
-std::string Response::getResponse()
+std::string Response::GetResponse()
 {
-	std::string response = _version + " " + intToString(_statusCode) + " " + _statusMessage + "\r\n";
+	std::string response = m_version + " " + intToString(m_statusCode) + " " + m_statusMessage + "\r\n";
 	std::string date = makeDate();
-	_headers.insert(std::pair<std::string, std::string>("Date", date));
-	_headers.insert(std::pair<std::string, std::string>("Server", "Webserv"));
-	_headers.insert(std::pair<std::string, std::string>("Content-Length", std::to_string(_body.length())));
+	m_headers.insert(std::pair<std::string, std::string>("Date", date));
+	m_headers.insert(std::pair<std::string, std::string>("Server", "Webserv"));
+	m_headers.insert(std::pair<std::string, std::string>("Content-Length", std::to_string(m_body.length())));
 
-	for (std::multimap<std::string, std::string>::iterator it = _headers.begin(); it != _headers.end(); it++)
+	for (std::multimap<std::string, std::string>::iterator it = m_headers.begin(); it != m_headers.end(); it++)
 	{
 		response += it->first + ": " + it->second + "\r\n";
 	}
 	response += "\r\n";
-	response += _body;
+	response += m_body;
 	return response;
 }
 

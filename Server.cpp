@@ -2,26 +2,26 @@
 
 Server::Server()
 {
-	_portFlag = false;
-	_serverNameFlag = false;
-	_rootFlag = false;
-	_indexFlag = false;
-	_methodFlag = false;
-	_errorPageFlag = false;
-	_locationFlag = false;
-	_limitBodySizeFlag = false;
-	_cgiFlag = false;
-	_port.push_back(80);
-	_serverName.push_back("localhost");
-	_root = ".";
-	_index.push_back("index.html");
-	_method.push_back("GET");
-	_method.push_back("POST");
-	_method.push_back("DELETE");
-	_errorPage[400] = "./errorpage/400.html";
-	_location.push_back(Location());
-	_limitBodySize = 1000000;
-	_cgi.clear();
+	m_portFlag = false;
+	m_serverNameFlag = false;
+	m_rootFlag = false;
+	m_indexFlag = false;
+	m_methodFlag = false;
+	m_errorPageFlag = false;
+	m_locationFlag = false;
+	m_limitBodySizeFlag = false;
+	m_cgiFlag = false;
+	m_port.push_back(80);
+	m_serverName.push_back("localhost");
+	m_root = ".";
+	m_index.push_back("index.html");
+	m_method.push_back("GET");
+	m_method.push_back("POST");
+	m_method.push_back("DELETE");
+	m_errorPage[400] = "./errorpage/400.html";
+	m_location.push_back(Location());
+	m_limitBodySize = 1000000;
+	m_cgi.clear();
 }
 
 Server::Server(const Server& rhs)
@@ -33,26 +33,26 @@ Server& Server::operator=(const Server& rhs)
 {
 	if (this == &rhs)
 		return *this;
-	_portFlag = rhs._portFlag;
-	_serverNameFlag = rhs._serverNameFlag;
-	_rootFlag = rhs._rootFlag;
-	_indexFlag = rhs._indexFlag;
-	_methodFlag = rhs._methodFlag;
-	_errorPageFlag = rhs._errorPageFlag;
-	_locationFlag = rhs._locationFlag;
-	_limitBodySizeFlag = rhs._limitBodySizeFlag;
-	_cgiFlag = rhs._cgiFlag;
+	m_portFlag = rhs.m_portFlag;
+	m_serverNameFlag = rhs.m_serverNameFlag;
+	m_rootFlag = rhs.m_rootFlag;
+	m_indexFlag = rhs.m_indexFlag;
+	m_methodFlag = rhs.m_methodFlag;
+	m_errorPageFlag = rhs.m_errorPageFlag;
+	m_locationFlag = rhs.m_locationFlag;
+	m_limitBodySizeFlag = rhs.m_limitBodySizeFlag;
+	m_cgiFlag = rhs.m_cgiFlag;
 
 
-	_port = rhs._port;
-	_serverName = rhs._serverName;
-	_root = rhs._root;
-	_index = rhs._index;
-	_method = rhs._method;
-	_errorPage = rhs._errorPage;
-	_location = rhs._location;
-	_limitBodySize = rhs._limitBodySize;
-	_cgi = rhs._cgi;
+	m_port = rhs.m_port;
+	m_serverName = rhs.m_serverName;
+	m_root = rhs.m_root;
+	m_index = rhs.m_index;
+	m_method = rhs.m_method;
+	m_errorPage = rhs.m_errorPage;
+	m_location = rhs.m_location;
+	m_limitBodySize = rhs.m_limitBodySize;
+	m_cgi = rhs.m_cgi;
 	return *this;
 }
 
@@ -60,45 +60,45 @@ Server::~Server()
 {
 }
 
-void Server::printServer()
+void Server::PrintServer()
 {
 	std::cout << "port: ";
-	for (size_t i = 0; i < _port.size(); i++)
-		std::cout << _port[i] << " ";
+	for (size_t i = 0; i < m_port.size(); i++)
+		std::cout << m_port[i] << " ";
 	std::cout << std::endl;
 	std::cout << "server_name: ";
-	for (size_t i = 0; i < _serverName.size(); i++)
-		std::cout << _serverName[i] << " ";
+	for (size_t i = 0; i < m_serverName.size(); i++)
+		std::cout << m_serverName[i] << " ";
 	std::cout << std::endl;
-	std::cout << "root: " << _root << std::endl;
+	std::cout << "root: " << m_root << std::endl;
 	std::cout << "index: ";
-	for (size_t i = 0; i < _index.size(); i++)
-		std::cout << _index[i] << " ";
+	for (size_t i = 0; i < m_index.size(); i++)
+		std::cout << m_index[i] << " ";
 	std::cout << std::endl;
 	std::cout << "method: ";
-	for (size_t i = 0; i < _method.size(); i++)
-		std::cout << _method[i] << " ";
+	for (size_t i = 0; i < m_method.size(); i++)
+		std::cout << m_method[i] << " ";
 	std::cout << std::endl;
 	std::cout << "error_page: ";
-	for (std::map<int, std::string>::iterator it = _errorPage.begin(); it != _errorPage.end(); it++)
+	for (std::map<int, std::string>::iterator it = m_errorPage.begin(); it != m_errorPage.end(); it++)
 		std::cout << it->first << "=" << it->second << ", ";
 	std::cout << std::endl;
-	std::cout << "limit_body_size: " << _limitBodySize << std::endl;
+	std::cout << "limit_body_size: " << m_limitBodySize << std::endl;
 	std::cout << "cgi: " << std::endl;
-	for (size_t i = 0; i < _cgi.size(); i++)
+	for (size_t i = 0; i < m_cgi.size(); i++)
 	{
-		for (size_t j = 0; j < _cgi[i].size(); j++)
-			std::cout << _cgi[i][j] << " ";
+		for (size_t j = 0; j < m_cgi[i].size(); j++)
+			std::cout << m_cgi[i][j] << " ";
 		std::cout << std::endl;
 	}
-	for (size_t i = 0; i < _location.size(); i++)
+	for (size_t i = 0; i < m_location.size(); i++)
 	{
 		std::cout << "location " << i << std::endl;
-		_location[i].printLocation();
+		m_location[i].PrintLocation();
 	}
 }
 
-void Server::parseServer(std::string block)
+void Server::ParseServer(std::string block)
 {
 	std::istringstream iss(block);
 	std::string line;
@@ -113,7 +113,7 @@ void Server::parseServer(std::string block)
 		{
 			try
 			{
-				_parsePort(issLine);
+				parsePort(issLine);
 			}
 			catch(const std::exception& e)
 			{
@@ -124,7 +124,7 @@ void Server::parseServer(std::string block)
 		{
 			try
 			{
-				_parseServerName(issLine);
+				parseServerName(issLine);
 			}
 			catch(const std::exception& e)
 			{
@@ -135,7 +135,7 @@ void Server::parseServer(std::string block)
 		{
 			try
 			{
-				_parseRoot(issLine);
+				parseRoot(issLine);
 			}
 			catch(const std::exception& e)
 			{
@@ -146,7 +146,7 @@ void Server::parseServer(std::string block)
 		{
 			try
 			{
-				_parseIndex(issLine);
+				parseIndex(issLine);
 			}
 			catch(const std::exception& e)
 			{
@@ -157,7 +157,7 @@ void Server::parseServer(std::string block)
 		{
 			try
 			{
-				_parseMethod(issLine);
+				parseMethod(issLine);
 			}
 			catch(const std::exception& e)
 			{
@@ -168,7 +168,7 @@ void Server::parseServer(std::string block)
 		{
 			try
 			{
-				_parseErrorPage(issLine);
+				parseErrorPage(issLine);
 			}
 			catch(const std::exception& e)
 			{
@@ -179,7 +179,7 @@ void Server::parseServer(std::string block)
 		{
 			try
 			{
-				_parseLimitBodySize(issLine);
+				parseLimitBodySize(issLine);
 			}
 			catch(const std::exception& e)
 			{
@@ -190,7 +190,7 @@ void Server::parseServer(std::string block)
 		{
 			try
 			{
-				_parseCgi(issLine);
+				parseCgi(issLine);
 			}
 			catch(const std::exception& e)
 			{
@@ -201,7 +201,7 @@ void Server::parseServer(std::string block)
 		{
 			try
 			{
-				_parseLocation(iss, issLine);
+				parseLocation(iss, issLine);
 			}
 			catch (const std::exception& e)
 			{
@@ -213,20 +213,20 @@ void Server::parseServer(std::string block)
 			throw std::runtime_error("Error: config file is invalid\n>>>" + line + "<<<");
 		}
 	}
-	for (size_t i = 0; i < _location.size(); i++)
+	for (size_t i = 0; i < m_location.size(); i++)
 	{
-		_location[i].setLocation(_root, _index, _method);
+		m_location[i].SetLocation(m_root, m_index, m_method);
 	}
 }
 
-void Server::_parsePort(std::istringstream& issLine)
+void Server::parsePort(std::istringstream& issLine)
 {
-	if (_portFlag)
+	if (m_portFlag)
 		throw std::runtime_error("listen directive is duplicated\n");
 	else
 	{
-		_portFlag = true;
-		_port.clear();
+		m_portFlag = true;
+		m_port.clear();
 	}
 	std::string token;
 	while (issLine >> token && token != ";")
@@ -239,53 +239,53 @@ void Server::_parsePort(std::istringstream& issLine)
 		long port = strtol(token.c_str(), NULL, 10);
 		if (port < 0 || port > 65535)
 			throw std::runtime_error("listen directive is invalid\n");
-		_port.push_back(port);
+		m_port.push_back(port);
 	}
 	if (token != ";")
 		throw std::runtime_error("listen directive is invalid\n");
 	if (issLine >> token)
 		throw std::runtime_error("listen directive is invalid\n");
-	if (_port.size() == 0)
+	if (m_port.size() == 0)
 		throw std::runtime_error("listen directive is invalid\n");
 }
 
-void Server::_parseServerName(std::istringstream& issLine)
+void Server::parseServerName(std::istringstream& issLine)
 {
-	if (_serverNameFlag)
+	if (m_serverNameFlag)
 		throw std::runtime_error("server_name directive is duplicated\n");
 	else
 	{
-		_serverNameFlag = true;
-		_serverName.clear();
+		m_serverNameFlag = true;
+		m_serverName.clear();
 	}
 	std::string token;
 	while (issLine >> token && token != ";")
 	{
-		_serverName.push_back(token);
+		m_serverName.push_back(token);
 	}
 	if (token != ";")
 		throw std::runtime_error("server_name directive is invalid\n");
 	if (issLine >> token)
 		throw std::runtime_error("server_name directive is invalid\n");
-	if (_serverName.size() == 0)
+	if (m_serverName.size() == 0)
 		throw std::runtime_error("server_name directive is invalid\n");
 }
 
-void Server::_parseRoot(std::istringstream& issLine)
+void Server::parseRoot(std::istringstream& issLine)
 {
-	if (_rootFlag)
+	if (m_rootFlag)
 		throw std::runtime_error("root directive is duplicated\n");
 	else
-		_rootFlag = true;
+		m_rootFlag = true;
 	std::string token;
 	if (issLine >> token)
 	{
-		_root = token;
+		m_root = token;
 		std::string reservedChars = ":/?#[]@!$&'()*+,;=";
 		std::string unreservedChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~";
-		for (size_t i = 0; i < _root.size(); i++)
+		for (size_t i = 0; i < m_root.size(); i++)
 		{
-			if (reservedChars.find(_root[i]) == std::string::npos && unreservedChars.find(_root[i]) == std::string::npos)
+			if (reservedChars.find(m_root[i]) == std::string::npos && unreservedChars.find(m_root[i]) == std::string::npos)
 				throw std::runtime_error("root directive is invalid\n");
 		}
 	}
@@ -298,36 +298,36 @@ void Server::_parseRoot(std::istringstream& issLine)
 		throw std::runtime_error("root directive is invalid\n");
 }
 
-void Server::_parseIndex(std::istringstream& issLine)
+void Server::parseIndex(std::istringstream& issLine)
 {
-	if (_indexFlag)
+	if (m_indexFlag)
 		throw std::runtime_error("index directive is duplicated\n");
 	else
 	{
-		_indexFlag = true;
-		_index.clear();
+		m_indexFlag = true;
+		m_index.clear();
 	}
 	std::string token;
 	while (issLine >> token && token != ";")
 	{
-		_index.push_back(token);
+		m_index.push_back(token);
 	}
 	if (token != ";")
 		throw std::runtime_error("index directive is invalid\n");
 	if (issLine >> token)
 		throw std::runtime_error("index directive is invalid\n");
-	if (_index.size() == 0)
+	if (m_index.size() == 0)
 		throw std::runtime_error("index directive is invalid\n");
 }
 
-void Server::_parseMethod(std::istringstream& issLine)
+void Server::parseMethod(std::istringstream& issLine)
 {
-	if (_methodFlag)
+	if (m_methodFlag)
 		throw std::runtime_error("method directive is duplicated\n");
 	else
 	{
-		_methodFlag = true;
-		_method.clear();
+		m_methodFlag = true;
+		m_method.clear();
 	}
 	std::string token;
 	std::vector<std::string> validMethod;
@@ -340,22 +340,22 @@ void Server::_parseMethod(std::istringstream& issLine)
 	{
 		if (std::find(validMethod.begin(), validMethod.end(), token) == validMethod.end())
 			throw std::runtime_error("method directive is invalid\n");
-		_method.push_back(token);
+		m_method.push_back(token);
 	}
 	if (token != ";")
 		throw std::runtime_error("method directive is invalid\n");
 	if (issLine >> token)
 		throw std::runtime_error("method directive is invalid\n");
-	if (_method.size() == 0)
+	if (m_method.size() == 0)
 		throw std::runtime_error("method directive is invalid\n");
 }
 
-void Server::_parseErrorPage(std::istringstream& issLine)
+void Server::parseErrorPage(std::istringstream& issLine)
 {
-	if (!_errorPageFlag)
+	if (!m_errorPageFlag)
 	{
-		_errorPageFlag = true;
-		_errorPage.clear();
+		m_errorPageFlag = true;
+		m_errorPage.clear();
 	}
 	std::string token;
 	if (!(issLine >> token))
@@ -377,21 +377,21 @@ void Server::_parseErrorPage(std::istringstream& issLine)
 		if (reservedChars.find(token[i]) == std::string::npos && unreservedChars.find(token[i]) == std::string::npos)
 			throw std::runtime_error("error_page directive is invalid\n");
 	}
-	_errorPage[errorCode] = token;
+	m_errorPage[errorCode] = token;
 	if (issLine >> token && token != ";")
 		throw std::runtime_error("error_page directive is invalid\n");
 	if (issLine >> token)
 		throw std::runtime_error("error_page directive is invalid\n");
-	if (_errorPage.size() == 0)
+	if (m_errorPage.size() == 0)
 		throw std::runtime_error("error_page directive is invalid\n");
 }
 
-void Server::_parseLimitBodySize(std::istringstream& issLine)
+void Server::parseLimitBodySize(std::istringstream& issLine)
 {
-	if (_limitBodySizeFlag)
+	if (m_limitBodySizeFlag)
 		throw std::runtime_error("limit_body_size directive is duplicated\n");
 	else
-		_limitBodySizeFlag = true;
+		m_limitBodySizeFlag = true;
 	std::string token;
 	if (issLine >> token)
 	{
@@ -400,7 +400,7 @@ void Server::_parseLimitBodySize(std::istringstream& issLine)
 			if (!std::isdigit(token[i]))
 				throw std::runtime_error("limit_body_size directive is invalid\n");
 		}
-		_limitBodySize = strtol(token.c_str(), NULL, 10);
+		m_limitBodySize = strtol(token.c_str(), NULL, 10);
 	}
 	else
 		throw std::runtime_error("limit_body_size directive is invalid\n");
@@ -411,12 +411,12 @@ void Server::_parseLimitBodySize(std::istringstream& issLine)
 		throw std::runtime_error("limit_body_size directive is invalid\n");
 }
 
-void Server::_parseLocation(std::istringstream& iss, std::istringstream& issLine)
+void Server::parseLocation(std::istringstream& iss, std::istringstream& issLine)
 {
-	if (!_locationFlag)
+	if (!m_locationFlag)
 	{
-		_locationFlag = true;
-		_location.clear();
+		m_locationFlag = true;
+		m_location.clear();
 	}
 	std::string token;
 	if (!(issLine >> token))
@@ -452,60 +452,60 @@ void Server::_parseLocation(std::istringstream& iss, std::istringstream& issLine
 	Location location;
 	try
 	{
-		location.parseLocation(block, path);
+		location.ParseLocation(block, path);
 	}
 	catch(const std::exception& e)
 	{
 		throw std::runtime_error(e.what());
 	}
-	_location.push_back(location);
+	m_location.push_back(location);
 }
 
 
-std::vector<int>& Server::getPort()
+std::vector<int>& Server::GetPort()
 {
-	return _port;
+	return m_port;
 }
 
-std::vector<std::string>& Server::getServerName()
+std::vector<std::string>& Server::GetServerName()
 {
-	return _serverName;
+	return m_serverName;
 }
 
-std::string& Server::getRoot()
+std::string& Server::GetRoot()
 {
-	return _root;
+	return m_root;
 }
 
-std::vector<std::string>& Server::getIndex()
+std::vector<std::string>& Server::GetIndex()
 {
-	return _index;
+	return m_index;
 }
 
-std::vector<std::string>& Server::getMethod()
+std::vector<std::string>& Server::GetMethod()
 {
-	return _method;
+	return m_method;
 }
 
-std::map<int, std::string>& Server::getErrorPage()
+std::map<int, std::string>& Server::GetErrorPage()
 {
-	return _errorPage;
+	return m_errorPage;
 }
 
-int& Server::getLimitBodySize()
+int& Server::GetLimitBodySize()
 {
-	return _limitBodySize;
+	return m_limitBodySize;
 }
 
-std::vector<Location>& Server::getLocation()
+std::vector<Location>& Server::GetLocation()
 {
-	return _location;
+	return m_location;
 }
 
-void Server::_parseCgi(std::istringstream& issLine)
+void Server::parseCgi(std::istringstream& issLine)
 {
-	if (_cgiFlag)
-		_cgiFlag = true;
+	if (m_cgiFlag)
+		m_cgiFlag = true;
 	std::string token;
 	std::vector<std::string> cgi;
 	if (!(issLine >> token))
@@ -534,15 +534,15 @@ void Server::_parseCgi(std::istringstream& issLine)
 		throw std::runtime_error("cgi is invalid");
 	if (issLine >> token)
 		throw std::runtime_error("cgi is invalid");
-	_cgi.push_back(cgi);
+	m_cgi.push_back(cgi);
 }
 
-std::vector< std::vector<std::string> >& Server::getCgi()
+std::vector< std::vector<std::string> >& Server::GetCgi()
 {
-	return _cgi;
+	return m_cgi;
 }
 
-bool& Server::getCgiFlag()
+bool& Server::GetCgiFlag()
 {
-	return _cgiFlag;
+	return m_cgiFlag;
 }

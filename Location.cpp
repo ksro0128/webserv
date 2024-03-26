@@ -2,18 +2,18 @@
 
 Location::Location()
 {
-	_path = "/";
-	_root = "";
-	_index.clear();
-	_method.clear();
-	_autoIndex = false;
-	_redirectionCode = 0;
-	_redirectionUri = "";
-	_rootFlag = false;
-	_indexFlag = false;
-	_methodFlag = false;
-	_autoIndexFlag = false;
-	_redirectionFlag = false;
+	m_path = "/";
+	m_root = "";
+	m_index.clear();
+	m_method.clear();
+	m_autoIndex = false;
+	m_redirectionCode = 0;
+	m_redirectionUri = "";
+	m_rootFlag = false;
+	m_indexFlag = false;
+	m_methodFlag = false;
+	m_autoIndexFlag = false;
+	m_redirectionFlag = false;
 }
 
 Location::Location(const Location& rhs)
@@ -25,18 +25,18 @@ Location& Location::operator=(const Location& rhs)
 {
 	if (this == &rhs)
 		return *this;
-	_path = rhs._path;
-	_root = rhs._root;
-	_index = rhs._index;
-	_method = rhs._method;
-	_autoIndex = rhs._autoIndex;
-	_redirectionCode = rhs._redirectionCode;
-	_redirectionUri = rhs._redirectionUri;
-	_rootFlag = rhs._rootFlag;
-	_indexFlag = rhs._indexFlag;
-	_methodFlag = rhs._methodFlag;
-	_autoIndexFlag = rhs._autoIndexFlag;
-	_redirectionFlag = rhs._redirectionFlag;
+	m_path = rhs.m_path;
+	m_root = rhs.m_root;
+	m_index = rhs.m_index;
+	m_method = rhs.m_method;
+	m_autoIndex = rhs.m_autoIndex;
+	m_redirectionCode = rhs.m_redirectionCode;
+	m_redirectionUri = rhs.m_redirectionUri;
+	m_rootFlag = rhs.m_rootFlag;
+	m_indexFlag = rhs.m_indexFlag;
+	m_methodFlag = rhs.m_methodFlag;
+	m_autoIndexFlag = rhs.m_autoIndexFlag;
+	m_redirectionFlag = rhs.m_redirectionFlag;
 
 	return *this;
 }
@@ -45,29 +45,29 @@ Location::~Location()
 {
 }
 
-void Location::printLocation()
+void Location::PrintLocation()
 {
-	std::cout << "path: " << _path << std::endl;
-	std::cout << "root: " << _root << std::endl;
+	std::cout << "path: " << m_path << std::endl;
+	std::cout << "root: " << m_root << std::endl;
 	std::cout << "index: ";
-	for (size_t i = 0; i < _index.size(); i++)
-		std::cout << _index[i] << " ";
+	for (size_t i = 0; i < m_index.size(); i++)
+		std::cout << m_index[i] << " ";
 	std::cout << std::endl;
 	std::cout << "method: ";
-	for (size_t i = 0; i < _method.size(); i++)
-		std::cout << _method[i] << " ";
+	for (size_t i = 0; i < m_method.size(); i++)
+		std::cout << m_method[i] << " ";
 	std::cout << std::endl;
 	std::cout << "autoindex: ";
-	if (_autoIndex)
+	if (m_autoIndex)
 		std::cout << "on" << std::endl;
 	else
 		std::cout << "off" << std::endl;
-	std::cout << "redirectionCode: " << _redirectionCode << std::endl;
-	std::cout << "redirectionUri: " << _redirectionUri << std::endl;
+	std::cout << "redirectionCode: " << m_redirectionCode << std::endl;
+	std::cout << "redirectionUri: " << m_redirectionUri << std::endl;
 
 }
 
-void Location::parseLocation(std::string block, std::string path)
+void Location::ParseLocation(std::string block, std::string path)
 {
 	std::istringstream issBlock(block);
 	std::string line;
@@ -80,7 +80,7 @@ void Location::parseLocation(std::string block, std::string path)
 		{
 			try
 			{
-				_parseRoot(issLine);
+				parseRoot(issLine);
 			}
 			catch (std::exception& e)
 			{
@@ -91,7 +91,7 @@ void Location::parseLocation(std::string block, std::string path)
 		{
 			try
 			{
-				_parseIndex(issLine);
+				parseIndex(issLine);
 			}
 			catch (std::exception& e)
 			{
@@ -102,7 +102,7 @@ void Location::parseLocation(std::string block, std::string path)
 		{
 			try
 			{
-				_parseMethod(issLine);
+				parseMethod(issLine);
 			}
 			catch (std::exception& e)
 			{
@@ -113,7 +113,7 @@ void Location::parseLocation(std::string block, std::string path)
 		{
 			try
 			{
-				_parseRedirection(issLine);
+				parseRedirection(issLine);
 			}
 			catch (std::exception& e)
 			{
@@ -124,7 +124,7 @@ void Location::parseLocation(std::string block, std::string path)
 		{
 			try
 			{
-				_parseAutoIndex(issLine);
+				parseAutoIndex(issLine);
 			}
 			catch (std::exception& e)
 			{
@@ -134,14 +134,14 @@ void Location::parseLocation(std::string block, std::string path)
 		else
 			throw std::runtime_error("Error: config file is invalid\n>>>" + line + "<<<");
 	}
-	_path = path;
+	m_path = path;
 }
 
-void Location::_parseRoot(std::istringstream& issLine)
+void Location::parseRoot(std::istringstream& issLine)
 {
-	if (_rootFlag)
+	if (m_rootFlag)
 		throw std::runtime_error("root is already defined");
-	_rootFlag = true;
+	m_rootFlag = true;
 	std::string token;
 	if (!(issLine >> token))
 		throw std::runtime_error("root is not defined");
@@ -152,7 +152,7 @@ void Location::_parseRoot(std::istringstream& issLine)
 		if (reservedChars.find(token[i]) == std::string::npos && unreservedChars.find(token[i]) == std::string::npos)
 			throw std::runtime_error("root is invalid");
 	}
-	_root = token;
+	m_root = token;
 	if (!(issLine >> token))
 		throw std::runtime_error("root is invalid");
 	if (token != ";")
@@ -161,11 +161,11 @@ void Location::_parseRoot(std::istringstream& issLine)
 		throw std::runtime_error("root is invalid");
 }
 
-void Location::_parseIndex(std::istringstream& issLine)
+void Location::parseIndex(std::istringstream& issLine)
 {
-	if (_indexFlag)
+	if (m_indexFlag)
 		throw std::runtime_error("index is already defined");
-	_indexFlag = true;
+	m_indexFlag = true;
 	std::string token;
 	while (issLine >> token)
 	{
@@ -178,7 +178,7 @@ void Location::_parseIndex(std::istringstream& issLine)
 			if (reservedChars.find(token[i]) == std::string::npos && unreservedChars.find(token[i]) == std::string::npos)
 				throw std::runtime_error("index is invalid");
 		}
-		_index.push_back(token);
+		m_index.push_back(token);
 	}
 	if (token != ";")
 		throw std::runtime_error("index is invalid");
@@ -186,11 +186,11 @@ void Location::_parseIndex(std::istringstream& issLine)
 		throw std::runtime_error("index is invalid");
 }
 
-void Location::_parseMethod(std::istringstream& issLine)
+void Location::parseMethod(std::istringstream& issLine)
 {
-	if (_methodFlag)
+	if (m_methodFlag)
 		throw std::runtime_error("method is already defined");
-	_methodFlag = true;
+	m_methodFlag = true;
 	std::string token;
 	std::vector<std::string> invalidMethods;
 	invalidMethods.push_back("GET");
@@ -204,7 +204,7 @@ void Location::_parseMethod(std::istringstream& issLine)
 			break;
 		if (std::find(invalidMethods.begin(), invalidMethods.end(), token) == invalidMethods.end())
 			throw std::runtime_error("method is invalid");
-		_method.push_back(token);
+		m_method.push_back(token);
 	}
 	if (token != ";")
 		throw std::runtime_error("method is invalid");
@@ -212,18 +212,18 @@ void Location::_parseMethod(std::istringstream& issLine)
 		throw std::runtime_error("method is invalid");
 }
 
-void Location::_parseAutoIndex(std::istringstream& issLine)
+void Location::parseAutoIndex(std::istringstream& issLine)
 {
-	if (_autoIndexFlag)
+	if (m_autoIndexFlag)
 		throw std::runtime_error("autoindex is already defined");
-	_autoIndexFlag = true;
+	m_autoIndexFlag = true;
 	std::string token;
 	if (!(issLine >> token))
 		throw std::runtime_error("autoindex is not defined");
 	if (token == "on")
-		_autoIndex = true;
+		m_autoIndex = true;
 	else if (token == "off")
-		_autoIndex = false;
+		m_autoIndex = false;
 	else
 		throw std::runtime_error("autoindex is invalid");
 	if (!(issLine >> token))
@@ -234,17 +234,17 @@ void Location::_parseAutoIndex(std::istringstream& issLine)
 		throw std::runtime_error("autoindex is invalid");
 }
 
-void Location::_parseRedirection(std::istringstream& issLine)
+void Location::parseRedirection(std::istringstream& issLine)
 {
-	if (_redirectionFlag)
+	if (m_redirectionFlag)
 		throw std::runtime_error("return is already defined");
-	_redirectionFlag = true;
+	m_redirectionFlag = true;
 	std::string token;
 	if (!(issLine >> token))
 		throw std::runtime_error("return is not defined");
 	if (token != "301" && token != "302" && token != "303" && token != "307" && token != "308")
 		throw std::runtime_error("return is invalid");
-	_redirectionCode = strtol(token.c_str(), NULL, 10);
+	m_redirectionCode = strtol(token.c_str(), NULL, 10);
 	if (!(issLine >> token))
 		throw std::runtime_error("return is invalid");
 	std::string reservedChars = ":/?#[]@!$&'()*+,;=";
@@ -254,7 +254,7 @@ void Location::_parseRedirection(std::istringstream& issLine)
 		if (reservedChars.find(token[i]) == std::string::npos && unreservedChars.find(token[i]) == std::string::npos)
 			throw std::runtime_error("return is invalid");
 	}
-	_redirectionUri = token;
+	m_redirectionUri = token;
 	if (!(issLine >> token))
 		throw std::runtime_error("return is invalid");
 	if (token != ";")
@@ -263,53 +263,53 @@ void Location::_parseRedirection(std::istringstream& issLine)
 		throw std::runtime_error("return is invalid");
 }
 
-void Location::setLocation(std::string root, std::vector<std::string> index, std::vector<std::string> method)
+void Location::SetLocation(std::string root, std::vector<std::string> index, std::vector<std::string> method)
 {
-	if (!_rootFlag)
-		_root = root;
-	if (!_indexFlag)
-		_index = index;
-	if (!_methodFlag)
-		_method = method;
+	if (!m_rootFlag)
+		m_root = root;
+	if (!m_indexFlag)
+		m_index = index;
+	if (!m_methodFlag)
+		m_method = method;
 }
 
-std::string& Location::getPath()
+std::string& Location::GetPath()
 {
-	return _path;
+	return m_path;
 }
 
-std::string& Location::getRoot()
+std::string& Location::GetRoot()
 {
-	return _root;
+	return m_root;
 }
 
-std::vector<std::string>& Location::getIndex()
+std::vector<std::string>& Location::GetIndex()
 {
-	return _index;
+	return m_index;
 }
 
-std::vector<std::string>& Location::getMethod()
+std::vector<std::string>& Location::GetMethod()
 {
-	return _method;
+	return m_method;
 }
 
 
-bool& Location::getAutoIndex()
+bool& Location::GetAutoIndex()
 {
-	return _autoIndex;
+	return m_autoIndex;
 }
 
-int& Location::getRedirectionCode()
+int& Location::GetRedirectionCode()
 {
-	return _redirectionCode;
+	return m_redirectionCode;
 }
 
-std::string& Location::getRedirectionUri()
+std::string& Location::GetRedirectionUri()
 {
-	return _redirectionUri;
+	return m_redirectionUri;
 }
 
-bool& Location::getRedicetionFlag()
+bool& Location::GetRedicetionFlag()
 {
-	return _redirectionFlag;
+	return m_redirectionFlag;
 }

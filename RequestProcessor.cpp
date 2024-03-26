@@ -4,7 +4,7 @@ RequestProcessor::RequestProcessor()
 {
 }
 
-RequestProcessor::RequestProcessor(Config &config) : _config(config)
+RequestProcessor::RequestProcessor(Config &config) : m_config(config)
 {
 }
 
@@ -12,13 +12,13 @@ RequestProcessor::~RequestProcessor()
 {
 }
 
-void RequestProcessor::set(Config &config, int kq)
+void RequestProcessor::Set(Config &config, int kq)
 {
-	_config = config;
-	_kq = kq;
+	m_config = config;
+	m_kq = kq;
 }
 
-void RequestProcessor::processRequests(Document &document)
+void RequestProcessor::ProcessRequests(Document &document)
 {
 	std::vector<Request> &complete = document.GetComplete();
 	
