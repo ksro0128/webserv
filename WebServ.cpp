@@ -61,21 +61,21 @@ void WebServ::runServer()
 				else // 클라이언트 소켓 - 요청 처리
 				{
 					// request 파싱
-					char buffer[1024];
-					int len = read(ev_list[i].ident, buffer, 1024);
-					if (len == -1)
-					{
-						throw std::runtime_error("read() error");
-					}
-					buffer[len] = '\0';
-					if (len == 0)
-					{
-						close(ev_list[i].ident);
-						std::cout << "connection closed" << std::endl;
-						continue;
-					}
-					std::cout << buffer << std::endl;
-					
+					// char buffer[1024];
+					// int len = read(ev_list[i].ident, buffer, 1024);
+					// if (len == -1)
+					// {
+					// 	throw std::runtime_error("read() error");
+					// }
+					// buffer[len] = '\0';
+					// if (len == 0)
+					// {
+					// 	close(ev_list[i].ident);
+					// 	std::cout << "connection closed" << std::endl;
+					// 	continue;
+					// }
+					// std::cout << buffer << std::endl;
+					_requestmaker.makeRequest(_document, ev_list[i].ident);
 				}
 			}
 			else if (ev_list[i].filter == EVFILT_WRITE) // write 이벤트
@@ -112,6 +112,8 @@ int WebServ::openPort(int port)
 	servAdr.sin_family = AF_INET;
 	servAdr.sin_addr.s_addr = htonl(INADDR_ANY);
 	servAdr.sin_port = htons(port);
+	int	option = 1;
+	setsockopt(servSock, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option) );
 	if (bind(servSock, (struct sockaddr *)&servAdr, sizeof(servAdr)) == -1)
 	{
 		throw std::runtime_error("bind() error");

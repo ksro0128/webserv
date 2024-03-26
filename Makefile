@@ -1,9 +1,12 @@
 CFLAGS = -Wall -Wextra -Werror -std=c++98
-SRCS = Webserv.cpp \
+SRCS = main.cpp \
+	   WebServ.cpp \
 	   Config.cpp \
 	   Server.cpp \
 	   Location.cpp \
 	   Request.cpp \
+	   RequestMaker.cpp \
+	   Document.cpp
 OBJS = $(SRCS:.cpp=.o)
 CC = c++
 TARGET = webserv

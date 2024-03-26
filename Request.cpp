@@ -21,17 +21,9 @@ Request::Request() : _status(0)
 
 Request::~Request() {}
 
-Request::Request(const Request& rhs) : _status(200), _buff(rhs._buff), _method(rhs._method), _path(rhs._path), _version(rhs._version), _headers(rhs._headers), _body(rhs._body)
+Request::Request(const Request& rhs)
 {
-    _buff = rhs._buff;
-
-
-    _method = rhs._method;
-    _path = rhs._path;
-    _version = rhs._version;
-    _headers = rhs._headers;
-    _body = rhs._body;
-    _status = rhs._status;
+    *this = rhs;
 }
 
 
@@ -46,16 +38,30 @@ Request& Request::operator=(const Request& r)
     _version = r._version;
     _headers = r._headers;
     _body = r._body;
+    _remain = r._remain;
+    _host = r._host;
     _status = r._status;
+    _origin_fd = r._origin_fd;
+    _host_port = r._host_port;
+    _startline_cnt = r._startline_cnt;
+    _req_close = r._req_close;
+    _read_body_len = r._read_body_len;
+    _req_body_len = r._req_body_len;
+    _body_limit = r._body_limit;
+    _content_length = r._content_length;
+    _chunked = r._chunked;
+    _eof = r._eof;
+    _stage = r._stage;
+    _complete = r._complete;
+    _end = r._end;
     return *this;
 }
 
 void Request::parseStartline(const std::string& s) 
 {
-    std::string tmp;
-    int         pos;
-    int         ret = 0;
-    int         len1 = 0, len2 = 0;
+    std::string           tmp;
+    unsigned long         pos;
+    int                   len1 = 0, len2 = 0;
 
     if (_startline_cnt == 0 && (pos = s.find(" ")) != std::string::npos)
     {
@@ -84,10 +90,9 @@ void Request::parseStartline(const std::string& s)
 
 void Request::parseHeader(const std::string& s) 
 {
-    std::string key, value;
-    int         key_len;
-    int         pos;
-    int         end;
+    std::string         key, value;
+    int                 key_len;
+    unsigned long       pos;
 
     if (s == "\r\n")
     {
@@ -105,97 +110,91 @@ void Request::parseHeader(const std::string& s)
         {
             std::cout << "key check error\n";
             _status = 400;
+            _req_close = 1;
         }
         value = s.substr(pos + 1, s.length() - key_len - 3);
         if (value == "")
         {
             std::cout << "value is empty\n";
             _status = 400;
+            _req_close = 1;
         }
         remove_ows(value);
         _headers.insert(std::pair<std::string, std::string>(key, value));
     }
+    else
+    {
+        std::cout << "header parsing error\n";
+        _status = 400;
+        _req_close = 1;
+    }
 }
 
-void Request::parseRequest(int fd) 
+void Request::parseRequest(int fd, std::string& buff) 
 {
-    static int i = 0;
-
-    std::cout << "i is" << i << std::endl;
-    i++;
     std::string tmp;
-    char buff[1025];
-    int  bytes;
     int  start,end;
     int  tmp_len;
     int  total_len;
 
+    static int i = 0;
+    i++;
+    _origin_fd = fd;
     start = 0;
     end = 0;
-    bytes = read(fd, buff, 1024);
-    buff[bytes] = 0;
     tmp = buff;
-    if (bytes == 0)
+    _buff = tmp;
+    if (_remain.length() > 0)
     {
-        _eof = 1;
-        std::cout << "Client " << fd << " closed connection" << std::endl;
-        close(fd);
-        return ;
+        _buff = _remain + _buff;
+        _remain = "";
     }
-    else if (bytes < 0)
-        throw std::runtime_error("Error reading from socket");
-    else
+    total_len = _buff.length();
+    while (_stage < 2 && (tmp = getLine(start, _buff)) != "")
     {
-        _buff = buff;
-        if (_remain.length() > 0)
+        tmp_len = tmp.length();
+        start += tmp_len;
+        if (tmp.find("\r\n") == std::string::npos || _end == 1)
         {
-            _buff = _remain + _buff;
-            _remain = "";
+            _remain += tmp;
+            // std::cout << "\n\n\nremain!\n";
+            // std::cout << _remain << std::endl;
+            // std::cout << "\n\n";
+            // std::cout << "_buff is " << _buff << "\n\n";
+            break;
         }
-        total_len = _buff.length();
-        while (_stage < 2 && (tmp = getLine(start, _buff)) != "")
+        switch (_stage)
         {
-            tmp_len = tmp.length();
-            start += tmp_len;
-            if (tmp.find("\r\n") == std::string::npos || _end == 1)
-            {
-                _remain += tmp;
-                std::cout << "\n\n\nremain!\n\n\n";
+            case 0:
+                parseStartline(tmp);
                 break;
-            }
-            switch (_stage)
-            {
-                case 0:
-                    parseStartline(tmp);
-                    break;
-                case 1:
-                    parseHeader(tmp);
-                    break;
-                default:
-                    break;
-            }
+            case 1:
+                parseHeader(tmp);
+                break;
+            default:
+                break;
         }
-        if (_stage == 2 && _end == 0)
-        {
-            if (_req_body_len <= total_len - start)
-            {
-                _body += _buff.substr(start, _req_body_len);
-                _remain = _buff.substr(start + _req_body_len, total_len - start - _req_body_len);
-                _read_body_len += _req_body_len;
-                _req_body_len = 0;
-                _end = 1;
-                _complete = 1;
-            }
-            else
-            {
-                _body += _buff.substr(start, total_len - start);
-                _read_body_len += total_len - start;
-                _req_body_len -= total_len - start;
-            }
-        }
-        if (end == 1)
-            _remain += _buff.substr(start, total_len - start);
     }
+    if (_stage == 2 && _end == 0)
+    {
+        if (_req_body_len <= total_len - start)
+        {
+            _body += _buff.substr(start, _req_body_len);
+            _remain = _buff.substr(start + _req_body_len, total_len - start - _req_body_len);
+            _read_body_len += _req_body_len;
+            _req_body_len = 0;
+            _end = 1;
+            _complete = 1;
+        }
+        else
+        {
+            _body += _buff.substr(start, total_len - start);
+            _read_body_len += total_len - start;
+            _req_body_len -= total_len - start;
+        }
+    }
+    if (end == 1)
+        _remain += _buff.substr(start, total_len - start);
 }
 
 void Request::printRequest() 
@@ -317,10 +316,11 @@ void Request::checkEseential()
                 }
             }
         }
-        int len, pos;
+        unsigned long pos;
         tmp = _headers.find("host")->second;
         if (pos = tmp.find(":"), pos != std::string::npos)
         {
+            _host = tmp.substr(0, pos);
             hostport = tmp.substr(pos + 1, tmp.length() - pos - 1);
             if (isNumber(hostport) == 0)
             {
@@ -332,7 +332,7 @@ void Request::checkEseential()
             else
             {
                 _host_port = atoi(hostport.c_str());
-                if (_host_port < 0 || _host_port > 65535)
+                if (_host_port < 0 || _host_port > 65535 || errno == ERANGE)
                 {
                     _status = 400;
                     std::cout << "Port number is invalid\n";
@@ -342,14 +342,17 @@ void Request::checkEseential()
             }
         }
         else
+        {
+            _host = tmp;
             _host_port = 80;
+        }
     }
 }
 
 int Request::isNumber(const std::string& s) 
 {
     long long num = 0;
-    for (int i = 0; i < s.length(); i++)
+    for (unsigned long i = 0; i < s.length(); i++)
     {
         if (!isdigit(s[i]))
             return (0);
@@ -362,7 +365,7 @@ int Request::isNumber(const std::string& s)
 
 std::string Request::getLine(int start, std::string& s) 
 {
-    int pos;
+    unsigned long pos;
     std::string tmp;
 
     if ((pos = s.find("\r\n", start)) != std::string::npos)
@@ -394,4 +397,39 @@ std::string& Request::getSpecificHeader(const std::string& key)
     if (_headers.find(key) == _headers.end())
         throw std::runtime_error("Header not found");
     return (_headers.find(key)->second);
+}
+
+std::string& Request::getMethod() 
+{
+    return (_method);
+}
+
+std::string& Request::getPath() 
+{
+    return (_path);
+}
+
+std::string& Request::getVersion() 
+{
+    return (_version);
+}
+
+std::string& Request::getBody() 
+{
+    return (_body);
+}
+
+std::string& Request::getHost() 
+{
+    return (_host);
+}
+
+int Request::getPort() 
+{
+    return (_host_port);
+}
+
+int Request::getStatus() 
+{
+    return (_status);
 }
