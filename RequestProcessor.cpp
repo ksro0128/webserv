@@ -26,6 +26,8 @@ RequestProcessor::RequestProcessor()
 	m_statusMessageSet[503] = "Service Unavailable";
 	m_statusMessageSet[504] = "Gateway Timeout";
 	m_statusMessageSet[505] = "HTTP Version Not Supported";
+	
+
 }
 
 RequestProcessor::RequestProcessor(Config &config) : m_config(config)
@@ -53,8 +55,8 @@ void RequestProcessor::ProcessRequests(Document &document)
 	document.RemoveComplete();
 }
 
-// response를 만들 때 필요한 것들
-// statuscode, statusmessage, headers, body, origin_fd
+// 오늘 정적 파일 처리 끝내고 에러 405, 404 처리 확인 하기
+// 동적 파일 구조 짜놓기
 
 void RequestProcessor::processRequest(Request &request, Document &document)
 {
@@ -62,90 +64,155 @@ void RequestProcessor::processRequest(Request &request, Document &document)
 	{
 		int status = request.GetStatus();
 		Response response;
-		setResponseError(response, m_config.GetServer(request.GetPort(), request.GetHost()), status);
-		response.SetOriginFd(request.GetFd());
+		setResponseError(request, response, m_config.GetServer(request.GetPort(), request.GetHost()), status);
+		document.PutResponse(response);
 		return ;
 	}
-	std::string server_name = request.GetHost();
-	int port = request.GetPort();
-	Server &server = m_config.GetServer(port, server_name);
-
+	
+	Server &server = m_config.GetServer(request.GetPort(), request.GetHost());
 	if (server.GetCgiFlag() == false) // 정적 파일만 지원하는 서버
 	{
-		// 서버가 지원하는 method 인지 확인
-
-		// request의 method가 서버가 지원하는 method인지 확인
-		// 서버가 지원하는 method가 아니면 405 보내기
-		// 서버가 지원하는 method일 때 그게 get head만 가능 아니면 405 보내기
-		if (request.GetMethod() != "GET")
-		{
-			// 405 보내기
-			return ;
-		}
-		Response response;
-		std::string path = server.GetRoot() + request.GetPath();
-		std::ifstream ifs(path);
-		response.SetVersion(request.GetVersion());
-		response.SetHeader("Content-Type", "text/html");
-		response.SetOriginFd(request.GetFd());
-		if (ifs.is_open() == false)
-		{
-			// 404 보내기
-			response.SetStatusCode(404);
-			response.SetStatusMessage(m_statusMessageSet[404]);
-			std::map<int, std::string> &errorPage = server.GetErrorPage();
-			std::string errorPath = errorPage[404];
-			std::ifstream ifs(errorPath);
-			std::ostringstream oss;
-			oss << ifs.rdbuf();
-			response.SetBody(oss.str());
-			document.PutResponse(response);
-			// std::cout << "404" << std::endl;
-			struct kevent ev;
-			EV_SET(&ev, request.GetFd(), EVFILT_WRITE, EV_ADD, 0, 0, NULL);
-			kevent(m_kq, &ev, 1, NULL, 0, NULL);
-			return ;
-		}
-		response.SetStatusCode(200);
-		response.SetStatusMessage("OK");
-		std::ostringstream oss;
-		oss << ifs.rdbuf();
-		response.SetBody(oss.str());
-		document.PutResponse(response);
-		struct kevent ev;
-		EV_SET(&ev, request.GetFd(), EVFILT_WRITE, EV_ADD, 0, 0, NULL);
-		kevent(m_kq, &ev, 1, NULL, 0, NULL);
-
-		// std::string res = response.GetResponse();
-		// std::cout << res << std::endl;
+		processStatic(request, document, server);
 	}
 	else // 동적 파일도 지원하는 서버
 	{
-		// 서버에서 지원하는 cgi 뽑기
-		// request path가 cgi확장자가 있는지 확인
-		// cgi 확장자가 있으면 cgi 실행
-		// 없으면 정적 파일 처리 (위와 동일)
-		std::vector<std::vector<std::string> > &cgi = server.GetCgi();
-		std::vector<std::vector<std::string> >::iterator it = cgi.begin();
-		for (; it != cgi.end(); it++)
+		std::vector<std::string> cgi = isCgi(request, server);
+		if (cgi.size() != 0)
 		{
-			if (request.GetPath().find((*it)[0]) != std::string::npos)
-			{
-				break ;
-			}
+			
+			processCgi(request, document, server, cgi);
+		}
+		else
+		{
+			processStatic(request, document, server);
 		}
 	}
 }
 
-void RequestProcessor::setResponseError(Response &response, Server &server, int status)
+void RequestProcessor::setResponseError(Request &request, Response &response, Server &server, int status)
 {
 	response.SetVersion("HTTP/1.1");
 	response.SetStatusCode(status);
 	response.SetStatusMessage(m_statusMessageSet[status]);
+	response.SetOriginFd(request.GetFd());
+	response.SetHeader("Content-Type", "text/html");
 	std::map<int, std::string> &errorPage = server.GetErrorPage();
 	std::string errorPath = errorPage[status];
 	std::ifstream ifs(errorPath);
 	std::ostringstream oss;
 	oss << ifs.rdbuf();
 	response.SetBody(oss.str());
+	struct kevent ev;
+	EV_SET(&ev, request.GetFd(), EVFILT_WRITE, EV_ADD, 0, 0, NULL);
+	kevent(m_kq, &ev, 1, NULL, 0, NULL);
+}
+
+void RequestProcessor::processStatic(Request &request, Document &document, Server &server)
+{
+	// method가 get, head가 아니면 405 보내기 -> header에 Allow: 허용 method들 넣어주기
+	// 서버에서 지원하는 method에 request의 method가 있는지 확인 - 없으면 405 보내기
+	// path에 해당하는 파일이 없으면 404 보내기
+	// 파일이 있으면 200 보내기
+	// 파일 읽어서 body에 넣어주기
+	// response에 version, statuscode, statusmessage, header, body 넣어주기
+	// kevent로 writeable 설정
+	// document에 response 넣어주기
+	std::string method = request.GetMethod();
+	std::vector<std::string> &methodSet = server.GetMethod();
+	Response response;
+
+	if (std::find(methodSet.begin(), methodSet.end(), method) == methodSet.end() || (method != "GET" && method != "HEAD"))
+	{
+		setResponseError(request, response, server, 405);
+		std::string allow;
+		for (std::vector<std::string>::iterator it = methodSet.begin(); it != methodSet.end(); it++)
+		{
+			if (*it == "GET")
+			{
+				allow += "GET, ";
+			}
+			else if (*it == "HEAD")
+			{
+				allow += "HEAD, ";
+			}
+		}
+		allow = allow.substr(0, allow.size() - 2);
+		response.SetHeader("Allow", allow);
+		document.PutResponse(response);
+		return ;
+	}
+	std::string path = server.GetRoot() + request.GetPath();
+	std::ifstream ifs(path);
+	if (ifs.is_open() == false)
+	{
+		setResponseError(request, response, server, 404);
+		document.PutResponse(response);
+		return ;
+	}
+	response.SetVersion(request.GetVersion());
+	response.SetStatusCode(200);
+	response.SetStatusMessage("OK");
+	response.SetHeader("Content-Type", getMimeType(getExtension(path), m_config.GetMimeSet()));
+	response.SetOriginFd(request.GetFd());
+	std::ostringstream oss;
+	oss << ifs.rdbuf();
+	if (method == "GET")
+		response.SetBody(oss.str());
+	struct kevent ev;
+	EV_SET(&ev, request.GetFd(), EVFILT_WRITE, EV_ADD, 0, 0, NULL);
+	kevent(m_kq, &ev, 1, NULL, 0, NULL);
+	document.PutResponse(response);
+}
+
+std::vector<std::string> RequestProcessor::isCgi(Request &request, Server &server)
+{
+	std::string extension = getExtension(request.GetPath());
+	std::vector<std::string> cgi;
+	std::vector< std::vector<std::string> > &cgiSet = server.GetCgi();
+	for (std::vector< std::vector<std::string> >::iterator it = cgiSet.begin(); it != cgiSet.end(); it++)
+	{
+		if ((*it)[0] == extension)
+		{
+			cgi = *it;
+			break;
+		}
+	}
+	return cgi;
+}
+
+
+void RequestProcessor::processCgi(Request &request, Document &document, Server &server, std::vector<std::string>& cgi)
+{
+	request.GetFd();
+	document.GetComplete();
+	server.GetRoot();
+	std::cout << "cgi " << cgi[0] << " " << cgi[1] << std::endl;
+}
+
+std::string RequestProcessor::getExtension(std::string path)
+{
+	std::string key;
+	size_t pos = path.find_last_of(".");
+	if (pos != std::string::npos)
+	{
+		key = path.substr(pos + 1);
+		pos = key.find_first_of("/");
+		if (pos != std::string::npos)
+			key.erase(pos);
+	}
+	else
+	{
+		key = "application/octet-stream";
+	}
+	return key;
+}
+
+std::string RequestProcessor::getMimeType(std::string key, std::map<std::string, std::string> &mimeSet)
+{
+	std::map<std::string, std::string>::iterator it = mimeSet.find(key);
+	if (it == mimeSet.end())
+	{
+		return "application/octet-stream";
+	}
+	return it->second;
 }

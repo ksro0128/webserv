@@ -8,6 +8,7 @@ Config::Config()
 Config::Config(const Config& rhs)
 {
 	m_configMultiMap = rhs.m_configMultiMap;
+	m_mimeSet = rhs.m_mimeSet;
 }
 
 Config& Config::operator=(const Config& rhs)
@@ -15,6 +16,7 @@ Config& Config::operator=(const Config& rhs)
 	if (this == &rhs)
 		return *this;
 	m_configMultiMap = rhs.m_configMultiMap;
+	m_mimeSet = rhs.m_mimeSet;
 	return *this;
 }
 
@@ -99,7 +101,7 @@ void Config::ParseConfig(std::string path)
 			throw std::runtime_error("Error: config file is invalid\nline: " + line + "\n");
 		}
 	}
-	
+	parseMime();
 }
 
 
@@ -174,4 +176,37 @@ std::vector<int> Config::GetPorts()
 			ports.push_back(it->first);
 	}
 	return ports;
+}
+
+void Config::parseMime()
+{
+	std::ifstream file("./default/mime.types");
+	if (!file.is_open())
+	{
+		throw std::runtime_error("Error: cannot open mime.types file");
+	}
+	std::ostringstream fileStream;
+	fileStream << file.rdbuf();
+	std::string fileString = fileStream.str();
+	std::istringstream iss(fileString);
+	std::string line;
+	while (std::getline(iss, line))
+	{
+		std::istringstream issLine(line);
+		std::string key;
+		std::string value;
+		issLine >> value;
+		while (issLine >> key)
+		{
+			m_mimeSet[key] = value;
+		}
+		m_mimeSet.erase(key);
+		key = key.substr(0, key.size() - 1);
+		m_mimeSet[key] = value;
+	}
+}
+
+std::map<std::string, std::string>& Config::GetMimeSet()
+{
+	return m_mimeSet;
 }
