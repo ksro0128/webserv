@@ -140,6 +140,7 @@ void Request::ParseRequest(int fd, std::string& buff)
     m_origin_fd = fd;
     start = 0;
     tmp = buff;
+	std::cout << tmp << std::endl;
     m_buff = tmp;
     if (m_remain.length() > 0)
     {

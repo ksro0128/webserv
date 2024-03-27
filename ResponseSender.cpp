@@ -21,9 +21,7 @@ void ResponseSender::SendResponses(Document &document) // 다양한 에러처리
 	{
 		Response response = *it;
 		int clientSock = response.GetOriginFd();
-		std::cout << "clientSock: " << clientSock << std::endl;
 		std::string responseStr = response.GetResponse();
-		std::cout << "responseStr: " << responseStr << std::endl;
 		int len = write(clientSock, responseStr.c_str(), responseStr.length());
 		if (len == -1 || static_cast<unsigned long>(len) != responseStr.length())
 		{

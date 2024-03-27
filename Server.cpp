@@ -513,8 +513,6 @@ void Server::parseCgi(std::istringstream& issLine)
 		if (unreservedChars.find(token[i]) == std::string::npos)
 			throw std::runtime_error("cgi is invalid");
 	}
-	if (token[0] != '.')
-		throw std::runtime_error("cgi is invalid");
 	cgi.push_back(token);
 	if (!(issLine >> token))
 		throw std::runtime_error("cgi is invalid");
