@@ -53,17 +53,24 @@ void RequestProcessor::ProcessRequests(Document &document)
 	document.RemoveComplete();
 }
 
+// response를 만들 때 필요한 것들
+// statuscode, statusmessage, headers, body, origin_fd
+
 void RequestProcessor::processRequest(Request &request, Document &document)
 {
 	if (request.GetStatus() != 200)
 	{
+		int status = request.GetStatus();
+		Response response;
+		setResponseError(response, m_config.GetServer(request.GetPort(), request.GetHost()), status);
+		response.SetOriginFd(request.GetFd());
 		return ;
 	}
 	std::string server_name = request.GetHost();
 	int port = request.GetPort();
 	Server &server = m_config.GetServer(port, server_name);
 
-	if (server.GetCgiFlag() == false) // 정적
+	if (server.GetCgiFlag() == false) // 정적 파일만 지원하는 서버
 	{
 		// 서버가 지원하는 method 인지 확인
 
@@ -112,7 +119,7 @@ void RequestProcessor::processRequest(Request &request, Document &document)
 		// std::string res = response.GetResponse();
 		// std::cout << res << std::endl;
 	}
-	else // 동적
+	else // 동적 파일도 지원하는 서버
 	{
 		// 서버에서 지원하는 cgi 뽑기
 		// request path가 cgi확장자가 있는지 확인
@@ -128,4 +135,17 @@ void RequestProcessor::processRequest(Request &request, Document &document)
 			}
 		}
 	}
+}
+
+void RequestProcessor::setResponseError(Response &response, Server &server, int status)
+{
+	response.SetVersion("HTTP/1.1");
+	response.SetStatusCode(status);
+	response.SetStatusMessage(m_statusMessageSet[status]);
+	std::map<int, std::string> &errorPage = server.GetErrorPage();
+	std::string errorPath = errorPage[status];
+	std::ifstream ifs(errorPath);
+	std::ostringstream oss;
+	oss << ifs.rdbuf();
+	response.SetBody(oss.str());
 }

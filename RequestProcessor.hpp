@@ -20,4 +20,6 @@ class RequestProcessor
 		int m_kq;
 		void processRequest(Request &request, Document &document);
 		std::map<int, std::string> m_statusMessageSet;
+		void setResponseError(Response &response, Server &server, int status);
+		void setWriteable();
 };
