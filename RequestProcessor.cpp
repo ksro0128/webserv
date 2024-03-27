@@ -217,7 +217,7 @@ std::string RequestProcessor::getMimeType(std::string key, std::map<std::string,
 	return it->second;
 }
 
-std::string RequestProcessor::getPath(std::string path, Server &server)
-{
+// std::string RequestProcessor::getPath(std::string path, Server &server)
+// {
 	
-}
+// }
