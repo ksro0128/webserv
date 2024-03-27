@@ -22,4 +22,5 @@ class RequestProcessor
 		std::map<int, std::string> m_statusMessageSet;
 		void setResponseError(Response &response, Server &server, int status);
 		void setWriteable();
+		void processCgi(Request &request, Document &document, Server &server, std::vector<std::string>& cgi);
 };
