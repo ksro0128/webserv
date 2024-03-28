@@ -218,12 +218,12 @@ bool RequestProcessor::isAllowedMethod(Request& request, Location& location)
 		return true;
 }
 
-std::string RequestProcessor::getFilePath(std::string path, Location &location)
-{
-	std::string path = location.GetRoot() + path;
-	// stat으로 파일 존재 혹은 디렉토리인지 확인
-	// 디렉토리면 index 받아서 stat확인
-	// 다 돌고 없으면 autoindex on 인지 확인
-	// autoindex on이면 디렉토리 내용 보여주기
-	// 아니면 404
-}
+// std::string RequestProcessor::getFilePath(std::string path, Location &location)
+// {
+// 	// std::string path = location.GetRoot() + path;
+// 	// stat으로 파일 존재 혹은 디렉토리인지 확인
+// 	// 디렉토리면 index 받아서 stat확인
+// 	// 다 돌고 없으면 autoindex on 인지 확인
+// 	// autoindex on이면 디렉토리 내용 보여주기
+// 	// 아니면 404
+// }
