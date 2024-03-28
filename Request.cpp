@@ -6,6 +6,7 @@ Request::Request() : m_status(0)
 {
     m_buff.reserve(1024);
     m_remain = "";
+    m_query = "";
     m_status = 200;
     m_reqClose = 0;
     m_eof = 0;
@@ -75,6 +76,12 @@ void Request::parseStartline(const std::string& s)
     {
         m_path = s.substr(len1 + 1, pos - len1 - 1);
         len2 = m_path.length();
+        unsigned long pos2;
+        if ((pos2 = m_path.find("?")) != std::string::npos)
+        {
+            m_query = m_path.substr(pos2 + 1, m_path.length() - pos2 - 1);
+            m_path = m_path.substr(0, pos2);
+        }
         m_startline_cnt++;
     }
     if (m_startline_cnt == 2 && (pos = s.find("\r\n", len1 + len2 + 2)) != std::string::npos)
@@ -140,7 +147,7 @@ void Request::ParseRequest(int fd, std::string& buff)
     m_origin_fd = fd;
     start = 0;
     tmp = buff;
-	std::cout << tmp << std::endl;
+	// std::cout << tmp << std::endl;
     m_buff = tmp;
     if (m_remain.length() > 0)
     {
@@ -183,6 +190,7 @@ void Request::ParseRequest(int fd, std::string& buff)
             m_reqBodyLen = 0;
             m_end = 1;
             m_complete = 1;
+            std::cout << "\n\nmstage  2\n\n";
         }
         else
         {
@@ -272,6 +280,7 @@ void Request::checkEssential()
         {
             m_reqBodyLen = 0;
             m_complete = 1;
+            std::cout << "\n\nmethod check\n\n";
         }
         m_end = 1;
     }

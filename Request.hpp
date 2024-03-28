@@ -30,6 +30,7 @@ private: //essential
     std::string     m_buff;
     std::string     m_method;
     std::string     m_path;
+    std::string     m_query;
     std::string     m_version;   
     std::multimap<std::string, std::string> m_headers;
     std::string     m_body;

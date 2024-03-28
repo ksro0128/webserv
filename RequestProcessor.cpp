@@ -173,11 +173,124 @@ std::vector<std::string> RequestProcessor::isCgi(Request &request, Server &serve
 
 void RequestProcessor::processCgi(Request &request, Document &document, Server &server, std::vector<std::string>& cgi)
 {
-	request.GetFd();
+request.GetFd();
 	document.GetComplete();
 	server.GetRoot();
-	cgi[0];
-	// std::cout << "cgi " << cgi[0] << " " << cgi[1] << std::endl;
+	std::cout << "cgi " << cgi[0] << " " << cgi[1] << std::endl;
+	// std::string& method = request.GetMethod();
+	// int	allowed = 0;
+	// for (std::vector<std::string>::iterator it = server.GetMethod().begin(); it != server.GetMethod().end(); it++)
+	// {
+	// 	if (*it == method)
+	// 	{
+	// 		allowed = 1;
+	// 		break;
+	// 	}
+	// }
+	// if (allowed == 0)
+	// {
+	// 	Response response;
+	// 	setResponseError(request, response, server, 405);
+	// 	std::string allow;
+	// 	for (std::vector<std::string>::iterator it = server.GetMethod().begin(); it != server.GetMethod().end(); it++)
+	// 	{
+	// 		allow += *it + ", ";
+	// 	}
+	// 	allow = allow.substr(0, allow.size() - 2);
+	// 	response.SetHeader("Allow", allow);
+	// 	document.PutResponse(response);
+	// 	std::cout << "method not allowed" << std::endl;
+	// 	return ;
+	// }
+	// std::string filename = request.GetPath();
+	// std::string extension = "." + cgi[0];
+	// unsigned long pos = filename.find_last_of("." + cgi[0]);
+	// filename = server.GetRoot() + filename.substr(0, pos + extension.length());
+	// std::ifstream ifs(filename);
+	// if (ifs.is_open() == false)
+	// {
+	// 	Response response;
+	// 	setResponseError(request, response, server, 404);
+	// 	document.PutResponse(response);
+	// 	std::cout << "file open error" << std::endl;
+	// 	return ;
+	// }
+	// if (access(cgi[1].c_str(), F_OK) == -1 || access(cgi[1].c_str(), X_OK) == -1)
+	// {
+	// 	Response response;
+	// 	setResponseError(request, response, server, 502);
+	// 	document.PutResponse(response);
+	// 	std::cout << "Cgi path error" << std::endl;
+	// 	return ;
+	// }
+	// std::cout << "checking cgi is done" << std::endl;
+	// int p[2];
+	// if (pipe(p) == -1)
+	// {
+	// 	Response response;
+	// 	setResponseError(request, response, server, 500);
+	// 	document.PutResponse(response);
+	// 	return ;
+	// }
+	// int pid = fork();
+	// if (pid == -1)
+	// {
+	// 	Response response;
+	// 	setResponseError(request, response, server, 500);
+	// 	document.PutResponse(response);
+	// 	return ;
+	// }
+	// if (pid == 0)
+	// {
+	// 	close(p[0]);
+	// 	dup2(p[1], 1);
+	// 	std::string path = server.GetRoot() + request.GetPath();
+	// 	// std::string query = request.GetQuery();
+	// 	std::string body = request.GetBody();
+	// 	std::string contentLength = "CONTENT_LENGTH=" + std::to_string(body.length());
+	// 	// std::string queryString = "QUERY_STRING=" + query;
+	// 	std::string requestMethod = "REQUEST_METHOD=" + method;
+	// 	std::string scriptName = "SCRIPT_NAME=" + request.GetPath();
+	// 	std::string scriptFilename = "SCRIPT_FILENAME=" + path;
+	// 	std::string pathInfo = "PATH_INFO=" + request.GetPath();
+	// 	std::string pathTranslated = "PATH_TRANSLATED=" + path;
+	// 	std::string remoteAddr = "REMOTE_ADDR=" + request.GetHost();
+	// 	std::string remotePort = "REMOTE_PORT=" + std::to_string(request.GetPort());
+	// 	std::string serverName = "SERVER_NAME=" + server.GetServerName()[0];
+	// 	std::string serverPort = "SERVER_PORT=" + std::to_string(server.GetPort()[0]);
+	// 	std::string serverProtocol = "SERVER_PROTOCOL=" + request.GetVersion();
+	// 	std::string serverSoftware = "SERVER_SOFTWARE=webserv";
+	// 	char *envp[] = {
+	// 		(char*)contentLength.c_str(),
+	// 		// (char*)queryString.c_str(),
+	// 		(char*)requestMethod.c_str(),
+	// 		(char*)scriptName.c_str(),
+	// 		(char*)scriptFilename.c_str(),
+	// 		(char*)pathInfo.c_str(),
+	// 		(char*)pathTranslated.c_str(),
+	// 		(char*)remoteAddr.c_str(),
+	// 		(char*)remotePort.c_str(),
+	// 		(char*)serverName.c_str(),
+	// 		(char*)serverPort.c_str(),
+	// 		(char*)serverProtocol.c_str(),
+	// 		(char*)serverSoftware.c_str(),
+	// 		NULL
+	// 	};
+	// 	char *argv[] = {
+	// 		(char*)filename.c_str(),
+	// 		NULL
+	// 	};
+	// 	if (execve(cgi[1].c_str(), argv, envp) == -1)
+	// 		exit(1);
+	// }
+	// else
+	// {
+	// 	close(p[1]);
+	// 	ExecInfo info(request.GetFd(), p[0], request);
+	// 	document.PutExcute(pid, info);
+	// 	struct kevent ev;
+	// 	EV_SET(&ev, p[0], EVFILT_READ, EV_ADD, 0, 0, NULL);
+	// }
 }
 
 std::string RequestProcessor::getExtension(std::string path)

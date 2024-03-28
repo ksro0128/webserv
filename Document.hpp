@@ -4,6 +4,7 @@
 # include "include.hpp"
 # include "Request.hpp"
 # include "Response.hpp"
+# include "ExecInfo.hpp"
 
 class Document{
 public:
@@ -20,16 +21,20 @@ public:
     void RemoveComplete();
     std::vector<Request>& GetComplete(); // 이것도 ㅇㅇ
 
-    void PutExcute(int pid, Request& req);
+    void PutExcute(int pid, ExecInfo& info);
     void RemoveExcute(int pid);
-    Request& GetExcute(int pid); // 이것도 ㅇㅇ
+    ExecInfo& GetExcute(int pid); // 이것도 ㅇㅇ
+    int GetExcuteCount();
+    std::vector<int>& GetReadPipe();
 	
     void PutResponse(Response& res);
     std::vector<Response>& GetResponse();
 private:
     std::map<int, Request> m_incomplete;
     std::vector<Request> m_complete; // 실행부로 넘기는거
-    std::map<int, Request> m_excute; // 실행부에서 등록,삭제,확인
+    std::map<int, ExecInfo> m_excute; // 실행부에서 등록,삭제,확인
+    std::vector<int> m_readPipe;
+    int m_excuteCount;
     std::vector<Response> m_response;
 };
 

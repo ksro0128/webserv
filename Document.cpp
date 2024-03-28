@@ -2,7 +2,7 @@
 
 Document::Document()
 {
-
+    m_excuteCount = 0;
 }
 Document::~Document()
 {
@@ -50,24 +50,35 @@ std::vector<Request>& Document::GetComplete()
 	return m_complete;
 }
 
-void Document::PutExcute(int pid, Request& req)
+void Document::PutExcute(int pid, ExecInfo& info)
 {
     if (m_excute.find(pid) != m_excute.end())
-        m_excute[pid] = req;
+        m_excute[pid] = info;
     else
-        m_excute.insert(std::pair<int, Request>(pid, req));
+    {
+        m_excute.insert(std::pair<int, ExecInfo>(pid, info));
+        m_excuteCount++;
+    }
 }
 void Document::RemoveExcute(int pid)
 {
     if (m_excute.find(pid) != m_excute.end())
+    {
         m_excute.erase(pid);
+        m_excuteCount--;
+    }
 }
-Request& Document::GetExcute(int pid)
+ExecInfo& Document::GetExcute(int pid)
 {
     if (m_excute.find(pid) != m_excute.end())
         return m_excute[pid];
     else
         throw std::runtime_error("no such pid");
+}
+
+std::vector<int>& Document::GetReadPipe()
+{
+    return m_readPipe;
 }
 
 void Document::PutResponse(Response& res)
@@ -78,4 +89,9 @@ void Document::PutResponse(Response& res)
 std::vector<Response>& Document::GetResponse()
 {
     return m_response;
+}
+
+int Document::GetExcuteCount()
+{
+    return m_excuteCount;
 }
