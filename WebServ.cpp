@@ -56,7 +56,7 @@ void WebServ::RunServer()
 					fcntl(clntSock, F_SETFL, flags);
 					EV_SET(&ev_set, clntSock, EVFILT_READ, EV_ADD, 0, 0, NULL);
 					kevent(m_kq, &ev_set, 1, NULL, 0, NULL);
-					std::cout << "new connection" << std::endl;
+					// std::cout << "new connection" << std::endl;
 				}
 				else // 클라이언트 소켓 - 요청 처리
 				{

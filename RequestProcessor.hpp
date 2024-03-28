@@ -28,5 +28,6 @@ class RequestProcessor
 		std::vector<std::string> isCgi(Request &request, Server &server);
 		std::string getMimeType(std::string key, std::map<std::string, std::string> &mimeSet);
 		std::string getExtension(std::string path);
-		// std::string getPath(std::string path, Server &server); // location 받아서 돌리면서 맞는 location 찾기 class server에서 할까.. location 반환하는 함수 만들어야겠다
+		bool isAllowedMethod(Request &request, Location &location);
+		std::string getFilePath(std::string path, Location &location);
 };
