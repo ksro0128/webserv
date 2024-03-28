@@ -21,6 +21,7 @@ Server::Server()
 	m_errorPage[401] = "./default/errorpage/401.html";
 	m_errorPage[403] = "./default/errorpage/403.html";
 	m_errorPage[404] = "./default/errorpage/404.html";
+	m_errorPage[405] = "./default/errorpage/405.html";
 	m_location.push_back(Location());
 	m_limitBodySize = 1000000;
 	m_cgi.clear();
@@ -552,7 +553,7 @@ Location& Server::GetLocationBlock(std::string path)
 				}
 			}
 		}
-		if (cnt == locationPath.size() && cnt > max)
+		if (cnt == locationPath.size() && (path[k] == '/' || path[k] == '\0') && cnt > max)
 		{
 			max = cnt;
 			index = i;

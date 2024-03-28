@@ -106,21 +106,13 @@ void RequestProcessor::setResponseError(Request &request, Response &response, Se
 
 void RequestProcessor::processStatic(Request &request, Document &document, Server &server)
 {
-	// method가 get, head가 아니면 405 보내기 -> header에 Allow: 허용 method들 넣어주기
-	// 서버에서 지원하는 method에 request의 method가 있는지 확인 - 없으면 405 보내기
-	// path에 해당하는 파일이 없으면 404 보내기
-	// 파일이 있으면 200 보내기
-	// 파일 읽어서 body에 넣어주기
-	// response에 version, statuscode, statusmessage, header, body 넣어주기
-	// kevent로 writeable 설정
-	// document에 response 넣어주기
 	std::string method = request.GetMethod();
-	std::vector<std::string> &methodSet = server.GetMethod();
 	Response response;
-
-	if (std::find(methodSet.begin(), methodSet.end(), method) == methodSet.end() || (method != "GET" && method != "HEAD"))
+	Location &location = server.GetLocationBlock(request.GetPath());
+	if (isAllowedMethod(request, location) == false || (method != "GET" && method != "HEAD"))
 	{
 		setResponseError(request, response, server, 405);
+		std::vector<std::string> &methodSet = location.GetMethod();
 		std::string allow;
 		for (std::vector<std::string>::iterator it = methodSet.begin(); it != methodSet.end(); it++)
 		{
@@ -138,10 +130,8 @@ void RequestProcessor::processStatic(Request &request, Document &document, Serve
 		document.PutResponse(response);
 		return ;
 	}
-	Location &location = server.GetLocationBlock(request.GetPath());
-	std::cout << "location block" << std::endl;
-	location.PrintLocation();
-	std::string path = server.GetRoot() + request.GetPath();
+	std::string path = location.GetRoot() + request.GetPath();
+	
 	std::ifstream ifs(path);
 	if (ifs.is_open() == false)
 	{
@@ -152,7 +142,7 @@ void RequestProcessor::processStatic(Request &request, Document &document, Serve
 	response.SetVersion(request.GetVersion());
 	response.SetStatusCode(200);
 	response.SetStatusMessage("OK");
-	response.SetHeader("Content-Type", getMimeType(getExtension(path), m_config.GetMimeSet()));
+	response.SetHeader("Content-Type", getMimeType(getExtension(request.GetPath()), m_config.GetMimeSet()));
 	response.SetOriginFd(request.GetFd());
 	std::ostringstream oss;
 	oss << ifs.rdbuf();
@@ -186,7 +176,8 @@ void RequestProcessor::processCgi(Request &request, Document &document, Server &
 	request.GetFd();
 	document.GetComplete();
 	server.GetRoot();
-	std::cout << "cgi " << cgi[0] << " " << cgi[1] << std::endl;
+	cgi[0];
+	// std::cout << "cgi " << cgi[0] << " " << cgi[1] << std::endl;
 }
 
 std::string RequestProcessor::getExtension(std::string path)
@@ -217,7 +208,22 @@ std::string RequestProcessor::getMimeType(std::string key, std::map<std::string,
 	return it->second;
 }
 
-// std::string RequestProcessor::getPath(std::string path, Server &server)
-// {
-	
-// }
+bool RequestProcessor::isAllowedMethod(Request& request, Location& location)
+{
+	std::string method = request.GetMethod();
+	std::vector<std::string> &methodSet = location.GetMethod();
+	if (std::find(methodSet.begin(), methodSet.end(), method) == methodSet.end())
+		return false;
+	else
+		return true;
+}
+
+std::string RequestProcessor::getFilePath(std::string path, Location &location)
+{
+	std::string path = location.GetRoot() + path;
+	// stat으로 파일 존재 혹은 디렉토리인지 확인
+	// 디렉토리면 index 받아서 stat확인
+	// 다 돌고 없으면 autoindex on 인지 확인
+	// autoindex on이면 디렉토리 내용 보여주기
+	// 아니면 404
+}
