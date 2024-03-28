@@ -55,9 +55,6 @@ void RequestProcessor::ProcessRequests(Document &document)
 	document.RemoveComplete();
 }
 
-// 오늘 정적 파일 처리 끝내고 에러 405, 404 처리 확인 하기
-// 동적 파일 구조 짜놓기
-
 void RequestProcessor::processRequest(Request &request, Document &document)
 {
 	if (request.GetStatus() != 200)
@@ -141,6 +138,9 @@ void RequestProcessor::processStatic(Request &request, Document &document, Serve
 		document.PutResponse(response);
 		return ;
 	}
+	Location &location = server.GetLocationBlock(request.GetPath());
+	std::cout << "location block" << std::endl;
+	location.PrintLocation();
 	std::string path = server.GetRoot() + request.GetPath();
 	std::ifstream ifs(path);
 	if (ifs.is_open() == false)

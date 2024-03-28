@@ -19,6 +19,7 @@ class Server
 		std::map<int, std::string>& GetErrorPage();
 		int& GetLimitBodySize();
 		std::vector<Location>& GetLocation();
+		Location& GetLocationBlock(std::string path);
 		std::vector< std::vector<std::string> >& GetCgi();
 		bool& GetCgiFlag();
 

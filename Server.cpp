@@ -214,9 +214,18 @@ void Server::ParseServer(std::string block)
 			throw std::runtime_error("Error: config file is invalid\n>>>" + line + "<<<");
 		}
 	}
+	int lflag = 0;
 	for (size_t i = 0; i < m_location.size(); i++)
 	{
+		if (m_location[i].GetPath() == "/")
+			lflag = 1;
 		m_location[i].SetLocation(m_root, m_index, m_method);
+	}
+	if (lflag == 0)
+	{
+		Location location;
+		location.SetLocation(m_root, m_index, m_method);
+		m_location.push_back(location);
 	}
 }
 
@@ -425,6 +434,8 @@ void Server::parseLocation(std::istringstream& iss, std::istringstream& issLine)
 			throw std::runtime_error("location directive is invalid\n");
 	}
 	std::string path = token;
+	if (path[0] != '/')
+		throw std::runtime_error("location directive is invalid\n");
 	if (issLine >> token)
 		throw std::runtime_error("location directive is invalid\n");
 	std::string line;
@@ -496,6 +507,58 @@ int& Server::GetLimitBodySize()
 std::vector<Location>& Server::GetLocation()
 {
 	return m_location;
+}
+
+Location& Server::GetLocationBlock(std::string path)
+{
+	size_t max = 0;
+	int index = 0;
+
+	for (size_t i = 0; i < m_location.size(); i++)
+	{
+		std::string locationPath = m_location[i].GetPath();
+		bool flag = false;
+		size_t cnt = 0;
+		size_t j = 0;
+		size_t k = 0;
+		while (j < locationPath.size() && k < path.size())
+		{
+			if (flag == false)
+			{
+				if (locationPath[j] == path[k])
+				{
+					flag = true;
+					j++;
+					k++;
+					cnt++;
+				}
+				else
+				{
+					k++;
+					continue ;
+				}
+			}
+			else if (flag == true)
+			{
+				if (locationPath[j] == path[k])
+				{
+					j++;
+					k++;
+					cnt++;
+				}
+				else
+				{
+					break ;
+				}
+			}
+		}
+		if (cnt == locationPath.size() && cnt > max)
+		{
+			max = cnt;
+			index = i;
+		}
+	}
+	return m_location[index];
 }
 
 void Server::parseCgi(std::istringstream& issLine)
