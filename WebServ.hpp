@@ -5,6 +5,7 @@
 #include "RequestMaker.hpp"
 #include "RequestProcessor.hpp"
 #include "ResponseSender.hpp"
+#include "CgiProcessor.hpp"
 
 class WebServ
 {
@@ -20,6 +21,7 @@ class WebServ
 		RequestMaker m_requestMaker;
 		RequestProcessor m_requestProcessor;
 		ResponseSender m_responseSender;
+		CgiProcessor m_cgiProcessor;
 		Config m_config;
 		std::vector<int> m_servSocks;
 		std::vector<int> m_ports;

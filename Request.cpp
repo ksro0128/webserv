@@ -416,6 +416,11 @@ std::string& Request::GetPath()
     return (m_path);
 }
 
+std::string& Request::GetQuery() 
+{
+    return (m_query);
+}
+
 std::string& Request::GetVersion() 
 {
     return (m_version);

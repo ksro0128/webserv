@@ -7,6 +7,7 @@ WebServ::WebServ(std::string configPath)
 	m_kq = kqueue();
 	m_requestProcessor.Set(m_config, m_kq);
 	m_responseSender.Set(m_config, m_kq);
+	m_cgiProcessor.Set(m_config, m_kq);
 	if (m_kq == -1)
 	{
 		throw std::runtime_error("kqueue() error");
@@ -62,6 +63,7 @@ void WebServ::RunServer()
 				{
 					m_requestMaker.makeRequest(m_document, ev_list[i].ident);
 				}
+				
 			}
 			else if (ev_list[i].filter == EVFILT_WRITE) // write 이벤트
 			{
@@ -70,9 +72,9 @@ void WebServ::RunServer()
 			}
 		}
 		// vector 받아서 실행 -> 실행상태 반환
-		m_requestProcessor.ProcessRequests(m_document);
+		// m_requestProcessor.ProcessRequests(m_document);
+		m_cgiProcessor.ExcuteCgi(m_document);
 		//wait 해야함
-
 		// response 보내기
 	}
 

@@ -15,6 +15,7 @@ public:
     void ParseRequest(int fd, std::string& buff);
     std::string&    GetMethod();
     std::string&    GetPath();
+    std::string&    GetQuery();
     std::string&    GetVersion();
     std::multimap<std::string, std::string>& GetHeaders();
     std::string&    GetBody();
