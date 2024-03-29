@@ -29,6 +29,15 @@ public:
 	
     void PutResponse(Response& res);
     std::vector<Response>& GetResponse();
+
+	void PutStatic(Request& req);
+	std::vector<Request>& GetStatic();
+	void ClearStatic();
+
+	void PutDynamic(Request& req);
+	std::vector<Request>& GetDynamic();
+	void ClearDynamic();
+
 private:
     std::map<int, Request> m_incomplete;
     std::vector<Request> m_complete; // 실행부로 넘기는거
@@ -36,6 +45,8 @@ private:
     std::vector<int> m_readPipe;
     int m_excuteCount;
     std::vector<Response> m_response;
+	std::vector<Request> m_static;
+	std::vector<Request> m_dynamic;
 };
 
 #endif

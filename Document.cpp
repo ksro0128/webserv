@@ -95,3 +95,33 @@ int Document::GetExcuteCount()
 {
     return m_excuteCount;
 }
+
+void Document::PutStatic(Request& req)
+{
+	m_static.push_back(req);
+}
+
+std::vector<Request>& Document::GetStatic()
+{
+	return m_static;
+}
+
+void Document::ClearStatic()
+{
+	m_static.clear();
+}
+
+void Document::PutDynamic(Request& req)
+{
+	m_dynamic.push_back(req);
+}
+
+std::vector<Request>& Document::GetDynamic()
+{
+	return m_dynamic;
+}
+
+void Document::ClearDynamic()
+{
+	m_dynamic.clear();
+}
