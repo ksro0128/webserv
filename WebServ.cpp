@@ -21,6 +21,7 @@ WebServ::WebServ(std::string configPath)
 		m_servSocks.push_back(openPort(*it));
 		EV_SET(&ev_set, m_servSocks.back(), EVFILT_READ, EV_ADD, 0, 0, NULL);
 		kevent(m_kq, &ev_set, 1, NULL, 0, NULL);
+		m_document.PutFdEvent(m_servSocks.back(), "server");
 	}
 }
 
@@ -57,7 +58,13 @@ void WebServ::RunServer()
 					fcntl(clntSock, F_SETFL, flags);
 					EV_SET(&ev_set, clntSock, EVFILT_READ, EV_ADD, 0, 0, NULL);
 					kevent(m_kq, &ev_set, 1, NULL, 0, NULL);
+					m_document.PutFdEvent(clntSock, "client");
 					// std::cout << "new connection" << std::endl;
+				}
+				else if (m_document.GetExcute().find(ev_list[i].ident) != m_document.GetExcute().end()) // cgi 소켓 - 응답 처리
+				{
+					std::cout << "read event for cgi" << std::endl;
+					m_cgiProcessor.Read(m_document, ev_list[i].ident);
 				}
 				else // 클라이언트 소켓 - 요청 처리
 				{
@@ -69,6 +76,13 @@ void WebServ::RunServer()
 			{
 				// response 보내기
 				m_responseSender.SendResponses(m_document);
+			}
+			else // process 이벤트
+			{
+				//wait 해야함
+				// response 보내기
+				std::cout << "process wait and making response event" << std::endl;
+				m_cgiProcessor.Wait(m_document, ev_list[i].ident);
 			}
 		}
 		// vector 받아서 실행 -> 실행상태 반환

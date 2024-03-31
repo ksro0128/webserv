@@ -33,7 +33,7 @@
 # .PHONY: all clean fclean re
 
 
-CFLAGS = -Wall -Wextra -Werror -std=c++98
+CFLAGS = -Wall -Wextra -Werror -std=c++98 -g3 -fsanitize=address
 SRCS = main.cpp \
 	   WebServ.cpp \
 	   Config.cpp \
