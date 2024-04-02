@@ -90,8 +90,7 @@ void RequestProcessor::setResponseError(Request &request, Response &response, Se
 	response.SetStatusMessage(m_statusMessageSet[status]);
 	response.SetOriginFd(request.GetFd());
 	response.SetHeader("Content-Type", "text/html");
-	std::map<int, std::string> &errorPage = server.GetErrorPage();
-	std::string errorPath = errorPage[status];
+	std::string errorPath = server.GetErrorPage(status);
 	std::ifstream ifs(errorPath);
 	std::ostringstream oss;
 	oss << ifs.rdbuf();
@@ -139,7 +138,7 @@ void RequestProcessor::processStatic(Request &request, Document &document, Serve
 	response.SetVersion(request.GetVersion());
 	response.SetStatusCode(200);
 	response.SetStatusMessage("OK");
-	response.SetHeader("Content-Type", getMimeType(getExtension(request.GetPath()), m_config.GetMimeSet()));
+	response.SetHeader("Content-Type", m_config.GetMimeType(getExtension(request.GetPath())));
 	response.SetOriginFd(request.GetFd());
 	std::ostringstream oss;
 	oss << ifs.rdbuf();

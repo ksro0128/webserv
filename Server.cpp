@@ -13,10 +13,11 @@ Server::Server()
 	m_port.push_back(80);
 	m_serverName.push_back("localhost");
 	m_root = ".";
-	m_index.push_back("index.html");
+	m_index.clear();
 	m_method.push_back("GET");
 	m_method.push_back("POST");
 	m_method.push_back("DELETE");
+	m_errorPage[301] = "./default/errorpage/301.html";
 	m_errorPage[400] = "./default/errorpage/400.html";
 	m_errorPage[401] = "./default/errorpage/401.html";
 	m_errorPage[403] = "./default/errorpage/403.html";
@@ -500,6 +501,11 @@ std::map<int, std::string>& Server::GetErrorPage()
 	return m_errorPage;
 }
 
+std::string Server::GetErrorPage(int status)
+{
+	return m_errorPage[status];
+}
+
 int& Server::GetLimitBodySize()
 {
 	return m_limitBodySize;
@@ -510,7 +516,7 @@ std::vector<Location>& Server::GetLocation()
 	return m_location;
 }
 
-Location& Server::GetLocationBlock(std::string path)
+Location& Server::GetLocationBlock(std::string path) // find 로
 {
 	size_t max = 0;
 	int index = 0;

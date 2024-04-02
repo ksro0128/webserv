@@ -285,7 +285,7 @@ void Request::checkEssential()
         {
             m_reqBodyLen = 0;
             m_complete = 1;
-            std::cout << "\n\nGET or HEAD normal checked\n\n";
+            // std::cout << "\n\nGET or HEAD normal checked\n\n";
         }
         m_end = 1;
     }
