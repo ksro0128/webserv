@@ -20,5 +20,6 @@
 #include <sys/socket.h>
 #include <sys/event.h>
 #include <exception>
+#include <sys/stat.h>
 
 #define BUF_SIZE 1024

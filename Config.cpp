@@ -2,7 +2,36 @@
 
 Config::Config()
 {
-	
+	m_statusMessageSet[100] = "Continue";
+	m_statusMessageSet[101] = "Switching Protocols";
+	m_statusMessageSet[200] = "OK";
+	m_statusMessageSet[201] = "Created";
+	m_statusMessageSet[202] = "Accepted";
+	m_statusMessageSet[204] = "No Content";
+	m_statusMessageSet[206] = "Partial Content";
+	m_statusMessageSet[300] = "Multiple Choices";
+	m_statusMessageSet[301] = "Moved Permanently";
+	m_statusMessageSet[302] = "Found";
+	m_statusMessageSet[303] = "See Other";
+	m_statusMessageSet[304] = "Not Modified";
+	m_statusMessageSet[400] = "Bad Request";
+	m_statusMessageSet[401] = "Unauthorized";
+	m_statusMessageSet[403] = "Forbidden";
+	m_statusMessageSet[404] = "Not Found";
+	m_statusMessageSet[405] = "Method Not Allowed";
+	m_statusMessageSet[406] = "Not Acceptable";
+	m_statusMessageSet[408] = "Request Timeout";
+	m_statusMessageSet[409] = "Conflict";
+	m_statusMessageSet[411] = "Length Required";
+	m_statusMessageSet[413] = "Payload Too Large";
+	m_statusMessageSet[414] = "URI Too Long";
+	m_statusMessageSet[415] = "Unsupported Media Type";
+	m_statusMessageSet[500] = "Internal Server Error";
+	m_statusMessageSet[501] = "Not Implemented";
+	m_statusMessageSet[502] = "Bad Gateway";
+	m_statusMessageSet[503] = "Service Unavailable";
+	m_statusMessageSet[504] = "Gateway Timeout";
+	m_statusMessageSet[505] = "HTTP Version Not Supported";
 }
 
 Config::Config(const Config& rhs)
@@ -206,7 +235,35 @@ void Config::parseMime()
 	}
 }
 
-std::map<std::string, std::string>& Config::GetMimeSet()
+std::string Config::GetMimeType(std::string extension)
 {
-	return m_mimeSet;
+	std::map<std::string, std::string>::iterator it = m_mimeSet.find(extension);
+	if (it == m_mimeSet.end())
+	{
+		return "application/octet-stream";
+	}
+	return it->second;
+}
+
+std::string Config::GetStatusMessage(int status)
+{
+	std::map<int, std::string>::iterator it = m_statusMessageSet.find(status);
+	if (it == m_statusMessageSet.end())
+	{
+		return "Internal Server Error";
+	}
+	return it->second;
+}
+
+std::string Config::GetExtension(std::string path)
+{
+	std::string extension;
+	size_t pos_point = path.find_last_of(".");
+	size_t pos_slash = path.find_last_of("/");
+	if (pos_point == std::string::npos || pos_slash > pos_point)
+	{
+		return "";
+	}
+	extension = path.substr(pos_point + 1);
+	return extension;
 }
