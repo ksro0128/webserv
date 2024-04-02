@@ -50,7 +50,7 @@ void WebServ::RunServer()
 			// else 
 			if (ev_list[i].filter == EVFILT_READ) // read 이벤트
 			{
-				if (std::find(m_servSocks.begin(), m_servSocks.end(), ev_list[i].ident) != m_servSocks.end()) // 서버 소켓 - 새로운 연결
+				if (m_document.GetFdEvent().find(ev_list[i].ident) != m_document.GetFdEvent().end() && m_document.GetFdEvent().find(ev_list[i].ident)->second == "server")
 				{
 					struct sockaddr_in clnt_adr;
 					socklen_t adr_sz = sizeof(clnt_adr);
@@ -61,17 +61,42 @@ void WebServ::RunServer()
 					EV_SET(&ev_set, clntSock, EVFILT_READ, EV_ADD, 0, 0, NULL);
 					kevent(m_kq, &ev_set, 1, NULL, 0, NULL);
 					m_document.PutFdEvent(clntSock, "client");
-					// std::cout << "new connection" << std::endl;
+					std::cout << "new connection" << std::endl;
 				}
-				else if (m_document.GetExcute().find(ev_list[i].ident) != m_document.GetExcute().end()) // cgi 소켓 - 응답 처리
+				else
 				{
-					// std::cout << "read event for cgi" << std::endl;
-					// m_cgiProcessor.Read(m_document, ev_list[i].ident);
+					if (m_document.GetExcute().find(ev_list[i].ident) != m_document.GetExcute().end()) // cgi 소켓 - 응답 처리
+					{
+						// std::cout << "read event for cgi" << std::endl;
+						m_cgiProcessor.Read(m_document, ev_list[i].ident);
+					}
+					else // 클라이언트 소켓 - 요청 처리
+					{
+						m_requestMaker.makeRequest(m_document, ev_list[i].ident);
+					}
 				}
-				else // 클라이언트 소켓 - 요청 처리
-				{
-					m_requestMaker.makeRequest(m_document, ev_list[i].ident);
-				}
+				// if (std::find(m_servSocks.begin(), m_servSocks.end(), ev_list[i].ident) != m_servSocks.end()) // 서버 소켓 - 새로운 연결
+				// {
+				// 	struct sockaddr_in clnt_adr;
+				// 	socklen_t adr_sz = sizeof(clnt_adr);
+				// 	int clntSock = accept(ev_list[i].ident, (struct sockaddr *)&clnt_adr, &adr_sz);
+				// 	int flags = fcntl(clntSock, F_GETFL, 0);
+				// 	flags |= O_NONBLOCK;
+				// 	fcntl(clntSock, F_SETFL, flags);
+				// 	EV_SET(&ev_set, clntSock, EVFILT_READ, EV_ADD, 0, 0, NULL);
+				// 	kevent(m_kq, &ev_set, 1, NULL, 0, NULL);
+				// 	m_document.PutFdEvent(clntSock, "client");
+				// 	// std::cout << "new connection" << std::endl;
+				// }
+				// else if (m_document.GetExcute().find(ev_list[i].ident) != m_document.GetExcute().end()) // cgi 소켓 - 응답 처리
+				// {
+				// 	// std::cout << "read event for cgi" << std::endl;
+				// 	// m_cgiProcessor.Read(m_document, ev_list[i].ident);
+				// }
+				// else // 클라이언트 소켓 - 요청 처리
+				// {
+				// 	m_requestMaker.makeRequest(m_document, ev_list[i].ident);
+				// }
 				
 			}
 			else if (ev_list[i].filter == EVFILT_WRITE) // write 이벤트
@@ -84,30 +109,30 @@ void WebServ::RunServer()
 				//wait 해야함
 				// response 보내기
 				// std::cout << "process wait and making response event" << std::endl;
-				// m_cgiProcessor.Wait(m_document, ev_list[i].ident);
+				m_cgiProcessor.Wait(m_document, ev_list[i].ident);
 			}
 		}
 		m_classifier.Classify(m_document);
 		
 
-		std::cout << "static" << std::endl;
-		std::vector<Request>& requests_s = m_document.GetStatic();
-		for (std::vector<Request>::iterator it = requests_s.begin(); it != requests_s.end(); it++)
-		{
-			it->PrintRequest();
-		}
-		std::vector<Request>& requests_d = m_document.GetDynamic();
+		// std::cout << "static" << std::endl;
+		// std::vector<Request>& requests_s = m_document.GetStatic();
+		// for (std::vector<Request>::iterator it = requests_s.begin(); it != requests_s.end(); it++)
+		// {
+		// 	it->PrintRequest();
+		// }
+		// std::vector<Request>& requests_d = m_document.GetDynamic();
 
-		std::cout << "dynamic" << std::endl;
-		for (std::vector<Request>::iterator it = requests_d.begin(); it != requests_d.end(); it++)
-		{
-			it->PrintRequest();
-		}
-		m_document.ClearStatic();
-		m_document.ClearDynamic();
+		// std::cout << "dynamic" << std::endl;
+		// for (std::vector<Request>::iterator it = requests_d.begin(); it != requests_d.end(); it++)
+		// {
+		// 	it->PrintRequest();
+		// }
+		// m_document.ClearStatic();
+		// m_document.ClearDynamic();
 		// vector 받아서 실행 -> 실행상태 반환
 		// m_requestProcessor.ProcessRequests(m_document);
-		// m_cgiProcessor.ExcuteCgi(m_document);
+		m_cgiProcessor.ExcuteCgi(m_document);
 		//wait 해야함
 		// response 보내기
 	}
