@@ -48,10 +48,10 @@ void RequestMaker::makeRequest(Document &doc, int fd)
     doc.GetIncomplete(fd).ParseRequest(fd,buff);
     if (doc.GetIncomplete(fd).IsComplete())
     {
-        // doc.PutComplete(doc.GetIncomplete(fd));
-        // doc.RemoveIncomplete(fd);
+        doc.PutComplete(doc.GetIncomplete(fd));
+        doc.RemoveIncomplete(fd);
         // start test
-        doc.PutDynamic(doc.GetIncomplete(fd));
+        // doc.PutDynamic(doc.GetIncomplete(fd));
         doc.RemoveIncomplete(fd);
         std::cout << "complete making request and put to dynamic" << std::endl;
         // end test

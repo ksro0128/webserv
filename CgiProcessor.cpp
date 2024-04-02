@@ -56,15 +56,6 @@ void CgiProcessor::ExcuteCgi(Document &doc)
     for (std::vector<Request>::iterator i = doc.GetDynamic().begin(); i != doc.GetDynamic().end(); i++)
     {
         Request& request = *i;
-		if (request.GetStatus() != 200)
-		{
-			Response response;
-        	setResponseError(request, response, server, request.GetStatus());
-        	doc.PutResponse(response);
-			setWriteEvent(request.GetFd());
-        	std::cout << "dont have to excute cgi because of already happening error" << std::endl;
-			continue;
-		}
         // std::string& method = request.GetMethod();
         Server& server = m_config.GetServer(request.GetPort(), request.GetHost());
         std::string filename = request.GetPath();
