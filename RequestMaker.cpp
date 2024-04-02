@@ -27,7 +27,6 @@ void RequestMaker::makeRequest(Document &doc, int fd)
     int bytes = 0;
     
     bytes = read(fd, buf, 1024);
-    buf[bytes] = '\0';
     std::string buff(buf);
     if (bytes == 0)
     {
@@ -35,6 +34,7 @@ void RequestMaker::makeRequest(Document &doc, int fd)
         if (close(fd) < 0)
             throw std::runtime_error("close error");
         std::cout << "Connection closed" << std::endl;
+        doc.GetFdEvent().erase(fd);
         return;
     }
     else if (bytes < 0)
@@ -48,6 +48,7 @@ void RequestMaker::makeRequest(Document &doc, int fd)
     doc.GetIncomplete(fd).ParseRequest(fd,buff);
     if (doc.GetIncomplete(fd).IsComplete())
     {
+        doc.GetIncomplete(fd).PrintRequest();
         doc.PutComplete(doc.GetIncomplete(fd));
         doc.RemoveIncomplete(fd);
         // start test

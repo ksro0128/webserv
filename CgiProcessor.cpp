@@ -58,11 +58,13 @@ void CgiProcessor::ExcuteCgi(Document &doc)
         Request& request = *i;
         // std::string& method = request.GetMethod();
         Server& server = m_config.GetServer(request.GetPort(), request.GetHost());
+		Location& location = server.GetLocationBlock(request.GetPath());
         std::string filename = request.GetPath();
         std::vector<std::string> cgi = getCgiInfo(request, server);
         std::string extension = "." + cgi[0];
         unsigned long pos = filename.find_last_of("." + cgi[0]);
-        filename = server.GetRoot() + filename.substr(0, pos + extension.length());
+        filename = location.GetRoot() + filename.substr(0, pos + extension.length());
+		// method check
         std::ifstream ifs(filename);
         if (ifs.is_open() == false)
         {
@@ -154,7 +156,6 @@ void CgiProcessor::Wait(Document &doc, int pid)
 		response.SetBody(doc.GetBuffer(pipefd));
 		doc.PutResponse(response);
 		setWriteEvent(request.GetFd());
-		doc.PutFdEvent(request.GetFd(), "response");
 		close(pipefd);
 		doc.RemoveExcute(pid);
 		doc.RemovePidInfo(pid);
@@ -168,7 +169,6 @@ void CgiProcessor::Wait(Document &doc, int pid)
 		setResponseError(request, response, server, 500);
 		doc.PutResponse(response);
 		setWriteEvent(request.GetFd());
-		doc.PutFdEvent(request.GetFd(), "response");
 		close(info.GetReadPipe());
 		doc.RemoveExcute(pid);
 		doc.RemovePidInfo(pid);

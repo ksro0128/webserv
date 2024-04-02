@@ -55,6 +55,7 @@ Request& Request::operator=(const Request& r)
     m_stage = r.m_stage;
     m_complete = r.m_complete;
     m_end = r.m_end;
+    m_query = r.m_query;
     return *this;
 }
 
@@ -190,7 +191,6 @@ void Request::ParseRequest(int fd, std::string& buff)
             m_reqBodyLen = 0;
             m_end = 1;
             m_complete = 1;
-            std::cout << "\n\nmstage  2\n\n";
         }
         else
         {
@@ -328,6 +328,11 @@ void Request::checkEssential()
                 }
             }
         }
+    }
+    if (m_path.length() > 1024 && m_status == 200)
+    {
+        m_status = 414;
+        m_req_close = 1;
     }
     unsigned long pos;
     tmp = m_headers.find("host")->second;
