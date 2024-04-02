@@ -198,6 +198,11 @@ void Request::ParseRequest(int fd, std::string& buff)
             m_readBodyLen += total_len - start;
             m_reqBodyLen -= total_len - start;
         }
+        if (m_readBodyLen > m_bodyLimit && m_status == 200)
+        {
+            m_status = 413;
+            m_reqClose = 1;
+        }
     }
     if (m_end == 1)
         m_remain += m_buff.substr(start, total_len - start);
@@ -280,7 +285,7 @@ void Request::checkEssential()
         {
             m_reqBodyLen = 0;
             m_complete = 1;
-            std::cout << "\n\nmethod check\n\n";
+            std::cout << "\n\nGET or HEAD normal checked\n\n";
         }
         m_end = 1;
     }
@@ -414,6 +419,11 @@ std::string& Request::GetMethod()
 std::string& Request::GetPath() 
 {
     return (m_path);
+}
+
+std::string& Request::GetQuery() 
+{
+    return (m_query);
 }
 
 std::string& Request::GetVersion() 

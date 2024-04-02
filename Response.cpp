@@ -134,3 +134,8 @@ int Response::GetOriginFd()
 {
 	return m_origin_fd;
 }
+
+void Response::AddBody(std::string& body)
+{
+	m_body += body;
+}

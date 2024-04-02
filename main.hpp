@@ -11,3 +11,4 @@
 #include "RequestProcessor.hpp"
 #include "Response.hpp"
 #include "ResponseSender.hpp"
+#include "CgiProcessor.hpp"

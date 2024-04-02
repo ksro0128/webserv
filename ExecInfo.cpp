@@ -4,8 +4,8 @@ ExecInfo::ExecInfo()
 {
 }
 
-ExecInfo::ExecInfo(int socket, int readPipe, Request& req)
-    : m_socket(socket), m_readPipe(readPipe), m_req(req)
+ExecInfo::ExecInfo(int socket, int readPipe, int pid,  Request& req)
+    : m_socket(socket), m_readPipe(readPipe), m_pid(pid), m_req(req)
 {
 }
 
@@ -25,6 +25,7 @@ ExecInfo& ExecInfo::operator=(const ExecInfo& r)
         m_socket = r.m_socket;
         m_readPipe = r.m_readPipe;
         m_req = r.m_req;
+        m_pid = r.m_pid;
     }
     return *this;
 }
@@ -42,4 +43,10 @@ int ExecInfo::GetReadPipe()
 Request& ExecInfo::GetRequest()
 {
     return m_req;
+}
+
+
+int ExecInfo::GetPid()
+{
+    return m_pid;
 }

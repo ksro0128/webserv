@@ -26,8 +26,6 @@ RequestProcessor::RequestProcessor()
 	m_statusMessageSet[503] = "Service Unavailable";
 	m_statusMessageSet[504] = "Gateway Timeout";
 	m_statusMessageSet[505] = "HTTP Version Not Supported";
-	
-
 }
 
 RequestProcessor::RequestProcessor(Config &config) : m_config(config)
@@ -65,7 +63,6 @@ void RequestProcessor::processRequest(Request &request, Document &document)
 		document.PutResponse(response);
 		return ;
 	}
-	
 	Server &server = m_config.GetServer(request.GetPort(), request.GetHost());
 	if (server.GetCgiFlag() == false) // 정적 파일만 지원하는 서버
 	{
@@ -173,7 +170,7 @@ std::vector<std::string> RequestProcessor::isCgi(Request &request, Server &serve
 
 void RequestProcessor::processCgi(Request &request, Document &document, Server &server, std::vector<std::string>& cgi)
 {
-request.GetFd();
+	request.GetFd();
 	document.GetComplete();
 	server.GetRoot();
 	std::cout << "cgi " << cgi[0] << " " << cgi[1] << std::endl;

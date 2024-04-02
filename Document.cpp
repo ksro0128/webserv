@@ -50,36 +50,46 @@ std::vector<Request>& Document::GetComplete()
 	return m_complete;
 }
 
-void Document::PutExcute(int pid, ExecInfo& info)
+void Document::PutExcute(int pipefd)
 {
-    if (m_excute.find(pid) != m_excute.end())
-        m_excute[pid] = info;
-    else
-    {
-        m_excute.insert(std::pair<int, ExecInfo>(pid, info));
-        m_excuteCount++;
-    }
-}
-void Document::RemoveExcute(int pid)
-{
-    if (m_excute.find(pid) != m_excute.end())
-    {
-        m_excute.erase(pid);
-        m_excuteCount--;
-    }
-}
-ExecInfo& Document::GetExcute(int pid)
-{
-    if (m_excute.find(pid) != m_excute.end())
-        return m_excute[pid];
-    else
-        throw std::runtime_error("no such pid");
+    m_excute[pipefd] = "";
 }
 
-std::vector<int>& Document::GetReadPipe()
+void Document::RemoveExcute(int pipefd)
 {
-    return m_readPipe;
+    if (m_excute.find(pipefd) != m_excute.end())
+        m_excute.erase(pipefd);
 }
+std::string& Document::GetBuffer(int pipefd)
+{
+    if (m_excute.find(pipefd) != m_excute.end())
+        return m_excute[pipefd];
+    else
+        throw std::runtime_error("no such pipefd");
+}
+
+std::map<int, std::string>& Document::GetExcute()
+{
+    return m_excute;
+}
+
+void Document::PutPidInfo(int pipefd, ExecInfo& info)
+{
+    m_pidInfo[pipefd] = info;
+}
+
+void Document::RemovePidInfo(int pipefd)
+{
+    if (m_pidInfo.find(pipefd) != m_pidInfo.end())
+        m_pidInfo.erase(pipefd);
+}
+
+ExecInfo& Document::GetPidInfo(int pid)
+{
+    return m_pidInfo[pid];
+}
+
+
 
 void Document::PutResponse(Response& res)
 {
@@ -124,4 +134,25 @@ std::vector<Request>& Document::GetDynamic()
 void Document::ClearDynamic()
 {
 	m_dynamic.clear();
+}
+
+void Document::AddExcuteCount()
+{
+    m_excuteCount++;
+}
+
+void Document::SubExcuteCount()
+{
+    m_excuteCount--;
+}
+
+
+void Document::PutFdEvent(int fd, const std::string& identifier)
+{
+    m_fd_identifier.insert(std::pair<int, std::string>(fd, identifier));
+}
+
+std::multimap<int, std::string>& Document::GetFdEvent()
+{
+    return m_fd_identifier;
 }
