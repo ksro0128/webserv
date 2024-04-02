@@ -8,6 +8,8 @@ WebServ::WebServ(std::string configPath)
 	m_requestProcessor.Set(m_config, m_kq);
 	m_responseSender.Set(m_config, m_kq);
 	m_cgiProcessor.Set(m_config, m_kq);
+	m_classifier.Set(m_config);
+	m_staticProcessor.Set(m_config, m_kq);
 	if (m_kq == -1)
 	{
 		throw std::runtime_error("kqueue() error");
@@ -63,8 +65,8 @@ void WebServ::RunServer()
 				}
 				else if (m_document.GetExcute().find(ev_list[i].ident) != m_document.GetExcute().end()) // cgi 소켓 - 응답 처리
 				{
-					std::cout << "read event for cgi" << std::endl;
-					m_cgiProcessor.Read(m_document, ev_list[i].ident);
+					// std::cout << "read event for cgi" << std::endl;
+					// m_cgiProcessor.Read(m_document, ev_list[i].ident);
 				}
 				else // 클라이언트 소켓 - 요청 처리
 				{
@@ -81,13 +83,31 @@ void WebServ::RunServer()
 			{
 				//wait 해야함
 				// response 보내기
-				std::cout << "process wait and making response event" << std::endl;
-				m_cgiProcessor.Wait(m_document, ev_list[i].ident);
+				// std::cout << "process wait and making response event" << std::endl;
+				// m_cgiProcessor.Wait(m_document, ev_list[i].ident);
 			}
 		}
+		m_classifier.Classify(m_document);
+		
+
+		std::cout << "static" << std::endl;
+		std::vector<Request>& requests_s = m_document.GetStatic();
+		for (std::vector<Request>::iterator it = requests_s.begin(); it != requests_s.end(); it++)
+		{
+			it->PrintRequest();
+		}
+		std::vector<Request>& requests_d = m_document.GetDynamic();
+
+		std::cout << "dynamic" << std::endl;
+		for (std::vector<Request>::iterator it = requests_d.begin(); it != requests_d.end(); it++)
+		{
+			it->PrintRequest();
+		}
+		m_document.ClearStatic();
+		m_document.ClearDynamic();
 		// vector 받아서 실행 -> 실행상태 반환
 		// m_requestProcessor.ProcessRequests(m_document);
-		m_cgiProcessor.ExcuteCgi(m_document);
+		// m_cgiProcessor.ExcuteCgi(m_document);
 		//wait 해야함
 		// response 보내기
 	}

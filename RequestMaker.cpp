@@ -53,7 +53,7 @@ void RequestMaker::makeRequest(Document &doc, int fd)
         // start test
         // doc.PutDynamic(doc.GetIncomplete(fd));
         doc.RemoveIncomplete(fd);
-        std::cout << "complete making request and put to dynamic" << std::endl;
+        // std::cout << "complete making request and put to dynamic" << std::endl;
         // end test
     }
 }

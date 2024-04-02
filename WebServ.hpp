@@ -4,8 +4,10 @@
 #include "Document.hpp"
 #include "RequestMaker.hpp"
 #include "RequestProcessor.hpp"
+#include "StaticProcessor.hpp"
 #include "ResponseSender.hpp"
 #include "CgiProcessor.hpp"
+#include "Classifier.hpp"
 
 class WebServ
 {
@@ -22,6 +24,8 @@ class WebServ
 		RequestProcessor m_requestProcessor;
 		ResponseSender m_responseSender;
 		CgiProcessor m_cgiProcessor;
+		Classifier m_classifier;
+		StaticProcessor m_staticProcessor;
 		Config m_config;
 		std::vector<int> m_servSocks;
 		std::vector<int> m_ports;

@@ -12,3 +12,5 @@
 #include "Response.hpp"
 #include "ResponseSender.hpp"
 #include "CgiProcessor.hpp"
+#include "Classifier.hpp"
+#include "StaticProcessor.hpp"
