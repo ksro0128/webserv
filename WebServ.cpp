@@ -47,9 +47,7 @@ void WebServ::RunServer()
                     struct sockaddr_in clnt_adr;
                     socklen_t adr_sz = sizeof(clnt_adr);
                     int clntSock = accept(ev_list[i].ident, (struct sockaddr *)&clnt_adr, &adr_sz);
-                    int flags = fcntl(clntSock, F_GETFL, 0);
-                    flags |= O_NONBLOCK;
-                    fcntl(clntSock, F_SETFL, flags);
+                    fcntl(clntSock, F_SETFL, O_NONBLOCK);
                     EV_SET(&ev_set, clntSock, EVFILT_READ, EV_ADD, 0, 0, NULL);
                     kevent(m_kq, &ev_set, 1, NULL, 0, NULL);
                     m_document.PutFdEvent(clntSock, "client");
@@ -60,7 +58,7 @@ void WebServ::RunServer()
                     if (m_document.GetExcute().find(ev_list[i].ident) != m_document.GetExcute().end()) // cgi 소켓 - 응답 처리
                     {
                         // std::cout << "read event for cgi" << std::endl;
-                        // m_cgiProcessor.Read(m_document, ev_list[i].ident);
+                        m_cgiProcessor.Read(m_document, ev_list[i].ident);
                     }
                     else // 클라이언트 소켓 - 요청 처리
                         m_requestMaker.makeRequest(m_document, ev_list[i].ident);
@@ -76,14 +74,14 @@ void WebServ::RunServer()
                 //wait 해야함
                 // response 보내기
                 // std::cout << "process wait and making response event" << std::endl;
-                // m_cgiProcessor.Wait(m_document, ev_list[i].ident);
+                m_cgiProcessor.Wait(m_document, ev_list[i].ident);
             }
         }
         m_classifier.Classify(m_document);
         m_staticProcessor.Process(m_document);
-        m_document.ClearDynamic();
-        // m_document.ClearStatic();
         m_cgiProcessor.ExcuteCgi(m_document);
+        m_document.ClearDynamic();
+        m_document.ClearStatic();
     }
 }
 

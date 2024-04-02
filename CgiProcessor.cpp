@@ -65,6 +65,8 @@ void CgiProcessor::ExcuteCgi(Document &doc)
         unsigned long pos = filename.find_last_of("." + cgi[0]);
         filename = location.GetRoot() + filename.substr(0, pos + extension.length());
 		// method check
+		std::cout << "cgi path : " << cgi[1] << std::endl;
+		std::cout << "filename : " << filename << std::endl;
         std::ifstream ifs(filename);
         if (ifs.is_open() == false)
         {
@@ -93,8 +95,6 @@ void CgiProcessor::ExcuteCgi(Document &doc)
 			setWriteEvent(request.GetFd());
         	continue;
         }
-		std::cout << "cgi path : " << cgi[1] << std::endl;
-		std::cout << "filename : " << filename << std::endl;
         int pid = fork();
         if (pid == -1)
         {

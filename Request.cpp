@@ -133,6 +133,7 @@ void Request::parseHeader(const std::string& s)
     else
     {
         std::cout << "header parsing error\n";
+        std::cout << "error header is " << s << "\n";
         m_status = 400;
         m_reqClose = 1;
     }
@@ -148,7 +149,9 @@ void Request::ParseRequest(int fd, std::string& buff)
     m_origin_fd = fd;
     start = 0;
     tmp = buff;
+    // std::cout << "In ParseRequest\n";
 	// std::cout << tmp << std::endl;
+    // std::cout << "End ParseRequest\n";
     m_buff = tmp;
     if (m_remain.length() > 0)
     {
@@ -332,7 +335,7 @@ void Request::checkEssential()
     if (m_path.length() > 1024 && m_status == 200)
     {
         m_status = 414;
-        m_req_close = 1;
+        m_reqClose = 1;
     }
     unsigned long pos;
     tmp = m_headers.find("host")->second;
@@ -454,4 +457,9 @@ int Request::GetPort()
 int Request::GetStatus() 
 {
     return (m_status);
+}
+
+int Request::GetReqClose() 
+{
+    return (m_reqClose);
 }

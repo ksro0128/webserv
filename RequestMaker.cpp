@@ -46,9 +46,10 @@ void RequestMaker::makeRequest(Document &doc, int fd)
         throw std::runtime_error("read error");
     }
     doc.GetIncomplete(fd).ParseRequest(fd,buff);
+    // if (doc.GetIncomplete(fd).IsComplete() || doc.GetIncomplete(fd).GetReqClose() == 1) // 헤더 파싱에러일 때, 왜 server not found 에러가 뜨는가????
     if (doc.GetIncomplete(fd).IsComplete())
     {
-        doc.GetIncomplete(fd).PrintRequest();
+        // doc.GetIncomplete(fd).PrintRequest();
         doc.PutComplete(doc.GetIncomplete(fd));
         doc.RemoveIncomplete(fd);
         // start test

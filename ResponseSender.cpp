@@ -20,6 +20,7 @@ void ResponseSender::SendResponses(Document &document) // 다양한 에러처리
 	for (std::vector<Response>::iterator it = responses.begin(); it != responses.end(); it++)
 	{
 		Response response = *it;
+		std::cout << "response status is " << response.GetStatusCode() << std::endl;
 		int clientSock = response.GetOriginFd();
 		std::string responseStr = response.GetResponse();
 		int len = write(clientSock, responseStr.c_str(), responseStr.length());

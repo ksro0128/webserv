@@ -26,6 +26,7 @@ public:
     int             GetPort();
     int             GetStatus();
     int             GetStatus(int status);
+    int             GetReqClose();
     std::string&    GetSpecificHeader(const std::string& key);
 private: //essential
     std::string     m_buff;
