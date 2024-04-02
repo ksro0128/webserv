@@ -17,6 +17,7 @@ class Server
 		std::vector<std::string>& GetIndex();
 		std::vector<std::string>& GetMethod();
 		std::map<int, std::string>& GetErrorPage();
+		std::string GetErrorPage(int status);
 		int& GetLimitBodySize();
 		std::vector<Location>& GetLocation();
 		Location& GetLocationBlock(std::string path);

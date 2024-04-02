@@ -51,7 +51,7 @@ void Classifier::classifyRequest(Document& document, Request &request)
 bool Classifier::isCgi(Request &request, Server &server)
 {
 	std::string extension = getExtension(request.GetPath());
-	std::cout << "extension : " << extension << std::endl;
+	// std::cout << "extension : " << extension << std::endl;
 	if (extension == "")
 		return false;
 	std::vector< std::vector<std::string> > cgiSet = server.GetCgi();

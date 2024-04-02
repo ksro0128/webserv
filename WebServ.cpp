@@ -35,7 +35,6 @@ void WebServ::RunServer()
 {
     struct kevent ev_set;
     struct kevent ev_list[50];
-
     while (1)
     {
         int nev = kevent(m_kq, NULL, 0, ev_list, 50, NULL);
