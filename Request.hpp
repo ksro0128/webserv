@@ -49,6 +49,7 @@ private: //essential
     int             m_bodyLimit;
     int             m_contentLength;
     int             m_chunked;
+    int             m_chunkedFlag;
     int             m_eof;
     int             m_stage;
     int             m_complete; // 완성했는가?
@@ -61,6 +62,7 @@ private: //essential
     void            checkEssential();
     void            remove_ows(std::string& s);
     int             isNumber(const std::string& s);
+    int             isHex(const std::string& s);
     std::string     getLine(int start, std::string& s);
 };
 

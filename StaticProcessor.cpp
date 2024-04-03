@@ -38,6 +38,15 @@ void StaticProcessor::processStatic(Request& request, Document& document)
 		document.PutResponse(response);
 		return ;
 	}
+	if (location.GetRedicetionFlag() == true)
+	{
+		setResponse(request, response, location.GetRedirectionCode());
+		putBody(response, server.GetErrorPage(location.GetRedirectionCode()));
+		response.SetHeader("Location", location.GetRedirectionUri());
+		setEventWriteable(request.GetFd());
+		document.PutResponse(response);
+		return ;
+	}
 	if (isAllowedMethod(request, location) == false || (request.GetMethod() != "GET" && request.GetMethod() != "HEAD"))
 	{
 		setResponse(request, response, 405);
@@ -241,29 +250,70 @@ bool StaticProcessor::isCgi(std::string path, Server &server)
 std::string StaticProcessor::autoIndex(std::string path)
 {
 	std::string body = "<html><head><title>Index of " + path + "</title></head><body><h1>Index of " + path + "</h1><hr><pre>";
-	DIR *dir;
-	struct dirent *ent;
-	if ((dir = opendir(path.c_str())) != NULL)
+	std::string whitespace;
+	DIR *dp;
+	struct dirent *dir;
+	struct stat st;
+	struct tm *nowtm;
+	char tmbuf[64];
+    timespec  date;
+	std::string before = "<a href=\"";
+	std::string after = "\">";
+	std::string	size_str;
+	int	flag = 0;
+	long	size;
+	if ((dp = opendir(path.c_str())) != NULL)
 	{
-		while ((ent = readdir(dir)) != NULL)
-		{
-			struct stat buff;
-			std::string time;
-			std::string size;
-			if (stat((path + ent->d_name).c_str(), &buff) == -1)
+		while ((dir = readdir(dp)) != NULL)
+    	{
+			whitespace = "";
+			if (dir->d_name[0] == '.' && dir->d_name[1] == '\0')
 				continue;
-			else
+			std::string name = dir->d_name;
+			stat((path + name).c_str(), &st);
+			if (S_ISDIR(st.st_mode))
 			{
-				struct tm *tm = localtime(&buff.st_mtime);
-				char buf[80];
-				strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M", tm);
-				time = buf;
-				size = std::to_string(buff.st_size);
-				body += "<a href=\"" + std::string(ent->d_name) + "\">" + std::string(ent->d_name) + "</a>" + std::string(buf) + std::string(size) + "\n";				
+				date = st.st_mtimespec;
+				int len = name.length();
+				for (int i = 30; i > len; i--)
+					whitespace += " ";
+				body += before + name + after + name + "</a>" + whitespace + '-' + "\n";
+			}
+    	}
+		closedir(dp);
+		flag++;
+	}
+	if ((dp = opendir(path.c_str())) != NULL)
+	{
+		while ((dir = readdir(dp)) != NULL)
+		{
+			whitespace = "";
+			if (dir->d_name[0] == '.')
+				continue;
+			std::string name = dir->d_name;
+			stat((path + name).c_str(), &st);
+			if (!S_ISDIR(st.st_mode))
+			{
+				date = st.st_mtimespec;
+				int len = name.length();
+				for (int i = 30; i > len; i--)
+					whitespace += " ";
+				nowtm = localtime(&date.tv_sec);
+				strftime(tmbuf, sizeof(tmbuf), "%Y-%m-%d %H:%M:%S", nowtm);
+				std::string date_str = tmbuf;
+				size = st.st_size;
+				if (size > 1024)
+					size_str = std::to_string(size / 1024) + "K";
+				else
+					size_str = std::to_string(size) + "B";
+				body += before + name + after + name + "</a>" + whitespace + size_str + "\t" + tmbuf + "\n";
 			}
 		}
-		closedir(dir);
+		flag++;
 	}
 	body += "</pre><hr></body></html>";
-	return body;
+	if (flag == 2)
+		return body;
+	else
+		return "";
 }
