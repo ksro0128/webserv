@@ -124,10 +124,6 @@ void StaticProcessor::setEventWriteable(int fd)
 std::string StaticProcessor::getFilePath(Document& document, Request &request, Response &response, Server& server, Location& location)
 {
 	std::string filePath = location.GetRoot() + request.GetPath();
-	std::cout << "root : " << location.GetRoot() << std::endl;
-	std::cout << "path : " << request.GetPath() << std::endl;
-	std::cout << "filePath : " << filePath << std::endl;
-	location.PrintLocation();
 	struct stat buf;
 	if (stat(filePath.c_str(), &buf) == -1)
 	{
@@ -150,10 +146,10 @@ std::string StaticProcessor::getFilePath(Document& document, Request &request, R
 	}
 	if (S_ISDIR(buf.st_mode) && filePath[filePath.size() - 1] != '/')
 	{
-		filePath += "/";
+		std::string tmp = request.GetPath() + "/";
 		setResponse(request, response, 301);
 		putBody(response, server.GetErrorPage(301));
-		response.SetHeader("Location", filePath);
+		response.SetHeader("Location", tmp);
 		setEventWriteable(request.GetFd());
 		document.PutResponse(response);
 		return "";
@@ -175,7 +171,8 @@ std::string StaticProcessor::getFilePath(Document& document, Request &request, R
 			{
 				// autoindex
 				setResponse(request, response, 200);
-
+				std::cout << "autoindex" << autoIndex(filePath) << std::endl;
+				response.SetBody(autoIndex(filePath));
 				//영찬 autoindex
 				setEventWriteable(request.GetFd());
 				document.PutResponse(response);
@@ -190,11 +187,20 @@ std::string StaticProcessor::getFilePath(Document& document, Request &request, R
 			if (file.is_open())
 			{
 				filePath = indexPath;
+				if (isCgi(indexPath, server) == true)
+				{
+					std::string tmp = request.GetPath() + "/" + *it;
+					std::cout << tmp << std::endl;
+					request.SetPath(tmp);
+					document.PutDynamic(request);
+					return "";
+				}
 				break;
 			}
 		}
 		if (filePath == location.GetRoot() + request.GetPath())
 		{
+			std::cout << "index file not found" << std::endl;
 			if (location.GetAutoIndex() == false)
 			{
 				setResponse(request, response, 403);
@@ -207,7 +213,7 @@ std::string StaticProcessor::getFilePath(Document& document, Request &request, R
 			{
 				// autoindex
 				setResponse(request, response, 200);
-
+				response.SetBody(autoIndex(filePath));
 				//영찬 autoindex
 				setEventWriteable(request.GetFd());
 				document.PutResponse(response);
@@ -216,4 +222,48 @@ std::string StaticProcessor::getFilePath(Document& document, Request &request, R
 		}
 	}
 	return filePath;
+}
+
+bool StaticProcessor::isCgi(std::string path, Server &server)
+{
+	std::string extension = m_config.GetExtension(path);
+	if (extension == "")
+		return false;
+	std::vector< std::vector<std::string> > cgiSet = server.GetCgi();
+	for (std::vector< std::vector<std::string> >::iterator it = cgiSet.begin(); it != cgiSet.end(); ++it)
+	{
+		if (extension == (*it)[0])
+			return true;
+	}
+	return false;
+}
+
+std::string StaticProcessor::autoIndex(std::string path)
+{
+	std::string body = "<html><head><title>Index of " + path + "</title></head><body><h1>Index of " + path + "</h1><hr><pre>";
+	DIR *dir;
+	struct dirent *ent;
+	if ((dir = opendir(path.c_str())) != NULL)
+	{
+		while ((ent = readdir(dir)) != NULL)
+		{
+			struct stat buff;
+			std::string time;
+			std::string size;
+			if (stat((path + ent->d_name).c_str(), &buff) == -1)
+				continue;
+			else
+			{
+				struct tm *tm = localtime(&buff.st_mtime);
+				char buf[80];
+				strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M", tm);
+				time = buf;
+				size = std::to_string(buff.st_size);
+				body += "<a href=\"" + std::string(ent->d_name) + "\">" + std::string(ent->d_name) + "</a>" + std::string(buf) + std::string(size) + "\n";				
+			}
+		}
+		closedir(dir);
+	}
+	body += "</pre><hr></body></html>";
+	return body;
 }

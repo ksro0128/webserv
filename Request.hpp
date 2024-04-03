@@ -19,6 +19,7 @@ public:
     std::string&    GetVersion();
     std::multimap<std::string, std::string>& GetHeaders();
     std::string&    GetBody();
+	void 		  	SetPath(std::string& path);
     int             IsComplete();
     void            PrintRequest();
     int             GetFd();

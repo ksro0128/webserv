@@ -28,4 +28,6 @@ class StaticProcessor
 		void putAllowedMethod(Response& response, Location& location);
 		void setEventWriteable(int fd);
 		std::string getFilePath(Document& document, Request &request, Response &response, Server &server, Location& location);
+		bool isCgi(std::string path, Server& server);
+		std::string autoIndex(std::string path);
 };

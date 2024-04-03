@@ -18,6 +18,5 @@ class Classifier
 		Classifier& operator=(const Classifier& rhs);
 		Config m_config;
 		void classifyRequest(Document& document, Request& request);
-		std::string getExtension(std::string path);
 		bool isCgi(Request& request, Server& server);
 };

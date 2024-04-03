@@ -50,8 +50,7 @@ void Classifier::classifyRequest(Document& document, Request &request)
 
 bool Classifier::isCgi(Request &request, Server &server)
 {
-	std::string extension = getExtension(request.GetPath());
-	// std::cout << "extension : " << extension << std::endl;
+	std::string extension = m_config.GetExtension(request.GetPath());
 	if (extension == "")
 		return false;
 	std::vector< std::vector<std::string> > cgiSet = server.GetCgi();
@@ -61,20 +60,4 @@ bool Classifier::isCgi(Request &request, Server &server)
 			return true;
 	}
 	return false;
-}
-
-std::string Classifier::getExtension(std::string path)
-{
-	std::string extension;
-	size_t pos = path.find_last_of(".");
-	if (pos != std::string::npos)
-	{
-		extension = path.substr(pos + 1);
-		pos = extension.find_first_of("/");
-		if (pos != std::string::npos)
-			extension.erase(pos);
-	}
-	else
-		extension = "";
-	return extension;
 }

@@ -21,5 +21,10 @@
 #include <sys/event.h>
 #include <exception>
 #include <sys/stat.h>
+#include <dirent.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <sys/wait.h>
 
 #define BUF_SIZE 1024

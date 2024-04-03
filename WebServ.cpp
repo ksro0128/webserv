@@ -57,11 +57,14 @@ void WebServ::RunServer()
                 {
                     if (m_document.GetExcute().find(ev_list[i].ident) != m_document.GetExcute().end()) // cgi 소켓 - 응답 처리
                     {
-                        // std::cout << "read event for cgi" << std::endl;
+                        std::cout << "read event for cgi" << std::endl;
                         m_cgiProcessor.Read(m_document, ev_list[i].ident);
                     }
                     else // 클라이언트 소켓 - 요청 처리
+					{
+
                         m_requestMaker.makeRequest(m_document, ev_list[i].ident);
+					}
                 }
             }
             else if (ev_list[i].filter == EVFILT_WRITE) // write 이벤트
@@ -80,8 +83,8 @@ void WebServ::RunServer()
         m_classifier.Classify(m_document);
         m_staticProcessor.Process(m_document);
         m_cgiProcessor.ExcuteCgi(m_document);
-        m_document.ClearDynamic();
-        m_document.ClearStatic();
+        // m_document.ClearDynamic();
+        // m_document.ClearStatic();
     }
 }
 

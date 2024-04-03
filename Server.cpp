@@ -518,54 +518,20 @@ std::vector<Location>& Server::GetLocation()
 
 Location& Server::GetLocationBlock(std::string path) // find 로
 {
-	size_t max = 0;
-	int index = 0;
-
+	int idx = -1;
 	for (size_t i = 0; i < m_location.size(); i++)
 	{
-		std::string locationPath = m_location[i].GetPath();
-		bool flag = false;
-		size_t cnt = 0;
-		size_t j = 0;
-		size_t k = 0;
-		while (j < locationPath.size() && k < path.size())
+		if (path.find(m_location[i].GetPath()) == 0)
 		{
-			if (flag == false)
-			{
-				if (locationPath[j] == path[k])
-				{
-					flag = true;
-					j++;
-					k++;
-					cnt++;
-				}
-				else
-				{
-					k++;
-					continue ;
-				}
-			}
-			else if (flag == true)
-			{
-				if (locationPath[j] == path[k])
-				{
-					j++;
-					k++;
-					cnt++;
-				}
-				else
-				{
-					break ;
-				}
-			}
-		}
-		if (cnt == locationPath.size() && (path[k] == '/' || path[k] == '\0') && cnt > max)
-		{
-			max = cnt;
-			index = i;
+			if (idx == -1)
+				idx = i;
+			else if (m_location[i].GetPath().size() > m_location[idx].GetPath().size())
+				idx = i;
 		}
 	}
-	return m_location[index];
+	if (idx == -1)
+		idx = 0;
+	return m_location[idx];
 }
 
 void Server::parseCgi(std::istringstream& issLine)

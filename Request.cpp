@@ -463,3 +463,8 @@ int Request::GetReqClose()
 {
     return (m_reqClose);
 }
+
+void Request::SetPath(std::string& path) 
+{
+	m_path = path;
+}
