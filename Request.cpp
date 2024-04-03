@@ -18,6 +18,7 @@ Request::Request() : m_status(0)
     m_complete = 0;
     m_startline_cnt = 0;
     m_end = 0;
+    m_chunkedFlag = 0;
 }
 
 Request::~Request() {}
@@ -145,13 +146,14 @@ void Request::ParseRequest(int fd, std::string& buff)
     int  start;
     int  tmp_len;
     int  total_len;
+    int  len;
 
     m_origin_fd = fd;
     start = 0;
     tmp = buff;
-    // std::cout << "In ParseRequest\n";
-	// std::cout << tmp << std::endl;
-    // std::cout << "End ParseRequest\n";
+    std::cout << "In ParseRequest\n";
+	std::cout << tmp << std::endl;
+    std::cout << "End ParseRequest\n";
     m_buff = tmp;
     if (m_remain.length() > 0)
     {
@@ -166,7 +168,7 @@ void Request::ParseRequest(int fd, std::string& buff)
         if (tmp.find("\r\n") == std::string::npos || m_end == 1)
         {
             m_remain += tmp;
-            // std::cout << "\n\n\nremain!\n";
+            std::cout << "\n\n\nremain!\n";
             // std::cout << m_remain << std::endl;
             // std::cout << "\n\n";
             // std::cout << "m_buff is " << m_buff << "\n\n";
@@ -186,7 +188,51 @@ void Request::ParseRequest(int fd, std::string& buff)
     }
     if (m_stage == 2 && m_end == 0)
     {
-        if (m_reqBodyLen <= total_len - start)
+        if (m_chunked == 1)
+        {
+            while (m_complete == 0)
+            {
+                std::cout << "in chunked part\n";
+                tmp = getLine(start, m_buff);
+                if (tmp.find("\r\n") == std::string::npos)
+                {
+                    m_remain = tmp;
+                    return ;
+                }
+                if (m_chunkedFlag == 0)
+                {
+                    if (isHex(tmp) == 0)
+                    {
+                        m_status = 400;
+                        m_reqClose = 1;
+                        return ;
+                    }
+                    len = std::stoi(tmp, 0, 16);
+                    m_reqBodyLen = len;
+                    m_chunkedFlag = 1;
+                }
+                else
+                {
+                    int len = tmp.length();
+                    if (len - 2 != m_reqBodyLen)
+                    {
+                        m_status = 400;
+                        m_reqClose = 1;
+                        return ;
+                    }
+                    if (len == 2)
+                    {
+                        m_complete = 1;
+                        m_end = 1;
+                    }
+                    m_body += tmp.substr(0, len - 2);
+                    std::cout << "m_body is " << m_body << std::endl;
+                    m_chunkedFlag = 0;
+                }
+                start += tmp.length();
+            }
+        }
+        else if (m_reqBodyLen <= total_len - start)
         {
             m_body += m_buff.substr(start, m_reqBodyLen);
             m_remain = m_buff.substr(start + m_reqBodyLen, total_len - start - m_reqBodyLen);
@@ -207,8 +253,8 @@ void Request::ParseRequest(int fd, std::string& buff)
             m_reqClose = 1;
         }
     }
-    if (m_end == 1)
-        m_remain += m_buff.substr(start, total_len - start);
+    if (m_complete == 1)
+        m_remain = m_buff.substr(start, total_len - start);
 }
 
 void Request::PrintRequest() 
@@ -275,7 +321,9 @@ void Request::remove_ows(std::string& s)
 void Request::checkEssential() 
 {
     std::string tmp, hostport;
-    if ((m_method == "GET" || m_method == "HEAD"))
+    if (m_headers.find("transfer-encoding") != m_headers.end() && m_headers.find("transfer-encoding")->second == "chunked")
+        m_chunked = 1;
+    if (m_method == "GET")
     {
         if (m_headers.find("content-length") != m_headers.end())
         {
@@ -301,7 +349,7 @@ void Request::checkEssential()
     }
     else
     {
-        if (m_headers.find("content-length") == m_headers.end())
+        if (m_chunked == 0 && m_headers.find("content-length") == m_headers.end())
         {
             m_status = 400;
             std::cout << "Content-Length header is missing\n";
@@ -378,6 +426,16 @@ int Request::isNumber(const std::string& s)
             return (0);
         num = num * 10 + (s[i] - '0');
         if (num < 0)
+            return (0);
+    }
+    return (1);
+}
+
+int Request::isHex(const std::string& s) 
+{
+    for (unsigned long i = 0; i < s.length() - 2; i++)
+    {
+        if (!isdigit(s[i]) && (s[i] < 'A' || s[i] > 'F') && (s[i] < 'a' || s[i] > 'f'))
             return (0);
     }
     return (1);

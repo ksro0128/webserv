@@ -24,9 +24,10 @@ RequestMaker &RequestMaker::operator=(const RequestMaker &rhs)
 void RequestMaker::makeRequest(Document &doc, int fd)
 {
     char buf[1025];
-    int bytes = 0;
-    
+    int bytes;
     bytes = read(fd, buf, 1024);
+    buf[bytes] = '\0';
+    std::cout << "read bytes: " << bytes << std::endl;
     std::string buff(buf);
     if (bytes == 0)
     {
