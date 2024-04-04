@@ -34,10 +34,12 @@ WebServ::~WebServ()
 void WebServ::RunServer()
 {
     struct kevent ev_set;
-    struct kevent ev_list[50];
+    struct kevent ev_list[500];
     while (1)
     {
-        int nev = kevent(m_kq, NULL, 0, ev_list, 50, NULL);
+        // std::cout << "wait for event" << std::endl;
+        // std::cout << "now connected client is " << m_document.GetFdEvent().size() << std::endl;
+        int nev = kevent(m_kq, NULL, 0, ev_list, 500, NULL);
         for (int i = 0; i < nev; i++)
         {
             if (ev_list[i].filter == EVFILT_READ) // read 이벤트
@@ -48,21 +50,29 @@ void WebServ::RunServer()
                     socklen_t adr_sz = sizeof(clnt_adr);
                     int clntSock = accept(ev_list[i].ident, (struct sockaddr *)&clnt_adr, &adr_sz);
                     fcntl(clntSock, F_SETFL, O_NONBLOCK);
+                    struct linger {
+                            int l_onoff;
+                            int l_linger;
+                    };
+                    struct linger _linger;
+                    _linger.l_onoff = 1;
+                    _linger.l_linger = 0;
+                    setsockopt(clntSock, SOL_SOCKET, SO_LINGER, &_linger, sizeof(_linger));
                     EV_SET(&ev_set, clntSock, EVFILT_READ, EV_ADD, 0, 0, NULL);
                     kevent(m_kq, &ev_set, 1, NULL, 0, NULL);
                     m_document.PutFdEvent(clntSock, "client");
-                    std::cout << "new connection" << std::endl;
+                    // std::cout << "new connection from fd " << clntSock << std::endl;
                 }
                 else
                 {
                     if (m_document.GetExcute().find(ev_list[i].ident) != m_document.GetExcute().end()) // cgi 소켓 - 응답 처리
                     {
-                        std::cout << "read event for cgi" << std::endl;
+                        // std::cout << "read event for cgi fd is " << ev_list[i].ident << std::endl;
                         m_cgiProcessor.Read(m_document, ev_list[i].ident);
                     }
                     else // 클라이언트 소켓 - 요청 처리
 					{
-
+                        // std::cout << "read event for client" << std::endl;
                         m_requestMaker.makeRequest(m_document, ev_list[i].ident);
 					}
                 }
@@ -70,13 +80,14 @@ void WebServ::RunServer()
             else if (ev_list[i].filter == EVFILT_WRITE) // write 이벤트
             {
                 // response 보내기
+                // std::cout << "write event" << std::endl;
                 m_responseSender.SendResponses(m_document);
             }
             else // process 이벤트
             {
                 //wait 해야함
                 // response 보내기
-                // std::cout << "process wait and making response event" << std::endl;
+                std::cout << "process wait and making response event" << std::endl;
                 m_cgiProcessor.Wait(m_document, ev_list[i].ident);
             }
         }
@@ -115,7 +126,7 @@ int WebServ::openPort(int port)
     {
         throw std::runtime_error("bind() error");
     }
-    if (listen(servSock, 5) == -1)
+    if (listen(servSock, 500) == -1)
     {
         throw std::runtime_error("listen() error");
     }

@@ -27,13 +27,14 @@ void RequestMaker::makeRequest(Document &doc, int fd)
     int bytes;
     bytes = read(fd, buf, 1024);
     buf[bytes] = '\0';
-    std::cout << "read bytes: " << bytes << std::endl;
+    // std::cout << "read bytes from fd " << fd << " : " << bytes << std::endl;
+    // std::cout << "read buf: " << buf << std::endl;
     std::string buff(buf);
     if (bytes == 0)
     {
         doc.RemoveIncomplete(fd);
         if (close(fd) < 0)
-            throw std::runtime_error("close error");
+            throw std::runtime_error("in byte 0 close error");
         std::cout << "Connection closed" << std::endl;
         doc.GetFdEvent().erase(fd);
         return;
@@ -42,21 +43,16 @@ void RequestMaker::makeRequest(Document &doc, int fd)
     {
         doc.RemoveIncomplete(fd);
         if (close(fd) < 0)
-            throw std::runtime_error("close error");
+            throw std::runtime_error("in byte minus close error");
         std::cout << "read error" << std::endl;
         throw std::runtime_error("read error");
     }
     doc.GetIncomplete(fd).ParseRequest(fd,buff);
-    // if (doc.GetIncomplete(fd).IsComplete() || doc.GetIncomplete(fd).GetReqClose() == 1) // 헤더 파싱에러일 때, 왜 server not found 에러가 뜨는가????
-    if (doc.GetIncomplete(fd).IsComplete())
+    if (doc.GetIncomplete(fd).IsComplete() || doc.GetIncomplete(fd).GetReqClose() == 1) // 헤더 파싱에러일 때, 왜 server not found 에러가 뜨는가????
+    // if (doc.GetIncomplete(fd).IsComplete())
     {
         // doc.GetIncomplete(fd).PrintRequest();
         doc.PutComplete(doc.GetIncomplete(fd));
         doc.RemoveIncomplete(fd);
-        // start test
-        // doc.PutDynamic(doc.GetIncomplete(fd));
-        doc.RemoveIncomplete(fd);
-        // std::cout << "complete making request and put to dynamic" << std::endl;
-        // end test
     }
 }

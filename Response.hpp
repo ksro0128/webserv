@@ -22,6 +22,7 @@ class Response
 		int GetStatusCode();
 		std::string GetStatusMessage();
 		std::multimap<std::string, std::string> GetHeaders();
+		std::string GetHeader(const std::string& key); // get specific header value
 		std::string GetBody();
 		std::string GetResponse();	
 		int GetOriginFd();
@@ -30,6 +31,7 @@ class Response
 		std::string m_version;
 		int m_origin_fd;
 		int m_statusCode;
+
 		std::string m_statusMessage;
 		std::multimap<std::string, std::string> m_headers;
 		std::string m_body;

@@ -151,9 +151,9 @@ void Request::ParseRequest(int fd, std::string& buff)
     m_origin_fd = fd;
     start = 0;
     tmp = buff;
-    std::cout << "In ParseRequest\n";
-	std::cout << tmp << std::endl;
-    std::cout << "End ParseRequest\n";
+    // std::cout << "In ParseRequest\n";
+	// std::cout << tmp << std::endl;
+    // std::cout << "End ParseRequest\n";
     m_buff = tmp;
     if (m_remain.length() > 0)
     {
@@ -168,7 +168,7 @@ void Request::ParseRequest(int fd, std::string& buff)
         if (tmp.find("\r\n") == std::string::npos || m_end == 1)
         {
             m_remain += tmp;
-            std::cout << "\n\n\nremain!\n";
+            // std::cout << "\n\n\nremain!\n";
             // std::cout << m_remain << std::endl;
             // std::cout << "\n\n";
             // std::cout << "m_buff is " << m_buff << "\n\n";
@@ -253,8 +253,15 @@ void Request::ParseRequest(int fd, std::string& buff)
             m_reqClose = 1;
         }
     }
-    if (m_complete == 1)
+    if (m_complete == 1 && start < total_len)
+    {
         m_remain = m_buff.substr(start, total_len - start);
+        if (m_remain.length() > 0)
+        {
+            std::cout << "remain is " << m_remain << std::endl;
+            std::cout << "although one request is done, there is remain\n";
+        }
+    }
 }
 
 void Request::PrintRequest() 
@@ -323,7 +330,7 @@ void Request::checkEssential()
     std::string tmp, hostport;
     if (m_headers.find("transfer-encoding") != m_headers.end() && m_headers.find("transfer-encoding")->second == "chunked")
         m_chunked = 1;
-    if (m_method == "GET")
+    if (m_method == "GET" || m_method == "HEAD")
     {
         if (m_headers.find("content-length") != m_headers.end())
         {
@@ -347,9 +354,9 @@ void Request::checkEssential()
         m_reqClose = 1;
         m_end = 1;
     }
-    else
+    else if (m_chunked == 0)
     {
-        if (m_chunked == 0 && m_headers.find("content-length") == m_headers.end())
+        if (m_headers.find("content-length") == m_headers.end())
         {
             m_status = 400;
             std::cout << "Content-Length header is missing\n";
@@ -412,8 +419,17 @@ void Request::checkEssential()
     }
     else
     {
+        struct sockaddr_in addr;
+        socklen_t         addr_len = sizeof(addr);
+        if (getsockname(m_origin_fd, (struct sockaddr*)&addr, (socklen_t*)&addr_len) < 0)
+        {
+            m_status = 500;
+            m_reqClose = 1;
+            m_end = 1;
+            return ;
+        }
         m_host = tmp;
-        m_host_port = 80;
+        m_host_port = ntohs(addr.sin_port);
     }
 }
 
@@ -525,4 +541,11 @@ int Request::GetReqClose()
 void Request::SetPath(std::string& path) 
 {
 	m_path = path;
+}
+
+std::string Request::GetHeader(const std::string& key) 
+{
+    if (m_headers.find(key) == m_headers.end())
+        return ("");
+    return (m_headers.find(key)->second);
 }

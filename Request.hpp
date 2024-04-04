@@ -18,6 +18,7 @@ public:
     std::string&    GetQuery();
     std::string&    GetVersion();
     std::multimap<std::string, std::string>& GetHeaders();
+    std::string     GetHeader(const std::string& key);
     std::string&    GetBody();
 	void 		  	SetPath(std::string& path);
     int             IsComplete();

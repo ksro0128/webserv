@@ -33,7 +33,7 @@ void StaticProcessor::processStatic(Request& request, Document& document)
 	if (request.GetStatus() != 200)
 	{
 		setResponse(request, response, request.GetStatus());
-		putBody(response, server.GetErrorPage(request.GetStatus()));
+		putBody(request, response, server.GetErrorPage(request.GetStatus()));
 		setEventWriteable(request.GetFd());
 		document.PutResponse(response);
 		return ;
@@ -41,7 +41,7 @@ void StaticProcessor::processStatic(Request& request, Document& document)
 	if (location.GetRedicetionFlag() == true)
 	{
 		setResponse(request, response, location.GetRedirectionCode());
-		putBody(response, server.GetErrorPage(location.GetRedirectionCode()));
+		putBody(request, response, server.GetErrorPage(location.GetRedirectionCode()));
 		response.SetHeader("Location", location.GetRedirectionUri());
 		setEventWriteable(request.GetFd());
 		document.PutResponse(response);
@@ -50,7 +50,7 @@ void StaticProcessor::processStatic(Request& request, Document& document)
 	if (isAllowedMethod(request, location) == false || (request.GetMethod() != "GET" && request.GetMethod() != "HEAD"))
 	{
 		setResponse(request, response, 405);
-		putBody(response, server.GetErrorPage(405));
+		putBody(request, response, server.GetErrorPage(405));
 		putAllowedMethod(response, location); 
 		setEventWriteable(request.GetFd());
 		document.PutResponse(response);
@@ -65,13 +65,23 @@ void StaticProcessor::processStatic(Request& request, Document& document)
 	if (file.is_open() == false)
 	{
 		setResponse(request, response, 404);
-		putBody(response, server.GetErrorPage(404));
+		putBody(request, response, server.GetErrorPage(404));
 		setEventWriteable(request.GetFd());
 		document.PutResponse(response);
 		return ;
 	}
+	file.close();
 	setResponse(request, response, 200);
-	putBody(response, path);
+	std::string tmp = request.GetHeader("connection");
+	if (tmp == "Close" || tmp == "close")
+	{
+		response.SetHeader("Connection", "close");
+	}
+	else
+	{
+		response.SetHeader("Connection", "keep-alive");
+	}
+	putBody(request, response, path);
 	setEventWriteable(request.GetFd());
 	document.PutResponse(response);
 }
@@ -95,12 +105,14 @@ void StaticProcessor::setResponse(Request &request, Response &response, int stat
 }
 
 
-void StaticProcessor::putBody(Response& response, std::string path)
+void StaticProcessor::putBody(Request& request, Response& response, std::string path)
 {
 	std::ifstream file(path.c_str());
 	std::ostringstream oss;
 	oss << file.rdbuf();
-	response.SetBody(oss.str());
+	response.SetHeader("Content-Length", std::to_string(oss.str().length()));
+	if (request.GetMethod() != "HEAD")
+		response.SetBody(oss.str());
 	response.SetHeader("Content-type", m_config.GetMimeType(m_config.GetExtension(path)));
 }
 
@@ -139,7 +151,7 @@ std::string StaticProcessor::getFilePath(Document& document, Request &request, R
 		if (errno == EACCES)
 		{
 			setResponse(request, response, 403);
-			putBody(response, server.GetErrorPage(403));
+			putBody(request, response, server.GetErrorPage(403));
 			setEventWriteable(request.GetFd());
 			document.PutResponse(response);
 			return "";
@@ -147,7 +159,7 @@ std::string StaticProcessor::getFilePath(Document& document, Request &request, R
 		else
 		{
 			setResponse(request, response, 404);
-			putBody(response, server.GetErrorPage(404));
+			putBody(request, response, server.GetErrorPage(404));
 			setEventWriteable(request.GetFd());
 			document.PutResponse(response);
 			return "";
@@ -157,7 +169,7 @@ std::string StaticProcessor::getFilePath(Document& document, Request &request, R
 	{
 		std::string tmp = request.GetPath() + "/";
 		setResponse(request, response, 301);
-		putBody(response, server.GetErrorPage(301));
+		putBody(request, response, server.GetErrorPage(301));
 		response.SetHeader("Location", tmp);
 		setEventWriteable(request.GetFd());
 		document.PutResponse(response);
@@ -171,7 +183,7 @@ std::string StaticProcessor::getFilePath(Document& document, Request &request, R
 			if (location.GetAutoIndex() == false)
 			{
 				setResponse(request, response, 403);
-				putBody(response, server.GetErrorPage(403));
+				putBody(request, response, server.GetErrorPage(403));
 				setEventWriteable(request.GetFd());
 				document.PutResponse(response);
 				return "";
@@ -191,7 +203,7 @@ std::string StaticProcessor::getFilePath(Document& document, Request &request, R
 		for (std::vector<std::string>::iterator it = index.begin(); it != index.end(); it++)
 		{
 			std::string indexPath = filePath + *it;
-			std::cout << "indexPath : " << indexPath << std::endl;
+			// std::cout << "indexPath : " << indexPath << std::endl;
 			std::fstream file(indexPath.c_str());
 			if (file.is_open())
 			{
@@ -213,7 +225,7 @@ std::string StaticProcessor::getFilePath(Document& document, Request &request, R
 			if (location.GetAutoIndex() == false)
 			{
 				setResponse(request, response, 403);
-				putBody(response, server.GetErrorPage(403));
+				putBody(request, response, server.GetErrorPage(403));
 				setEventWriteable(request.GetFd());
 				document.PutResponse(response);
 				return "";

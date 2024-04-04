@@ -65,8 +65,8 @@ void CgiProcessor::ExcuteCgi(Document &doc)
         unsigned long pos = filename.find_last_of("." + cgi[0]);
         filename = location.GetRoot() + filename.substr(0, pos + extension.length());
 		// method check
-		std::cout << "cgi path : " << cgi[1] << std::endl;
-		std::cout << "filename : " << filename << std::endl;
+		// std::cout << "cgi path : " << cgi[1] << std::endl;
+		// std::cout << "filename : " << filename << std::endl;
         std::ifstream ifs(filename);
         if (ifs.is_open() == false)
         {
@@ -114,7 +114,7 @@ void CgiProcessor::ExcuteCgi(Document &doc)
 			setPidEvent(pid);
 			doc.PutPidInfo(pid, info);
 			doc.PutExcute(p[0]);
-			std::cout << "done cgi excute and register pipe and pid to event" << std::endl;
+			std::cout << "excute cgi! client fd is" << request.GetFd() << " and pipe fd is" << p[0] << std::endl;
         }
     }
     doc.ClearDynamic();
@@ -153,11 +153,17 @@ void CgiProcessor::Wait(Document &doc, int pid)
 		response.SetStatusMessage("OK");
 		response.SetOriginFd(request.GetFd());
 		response.SetHeader("Content-Type", "text/html");
+		response.SetHeader("Content-Length", std::to_string(doc.GetBuffer(pipefd).length()));
 		response.SetBody(doc.GetBuffer(pipefd));
 		doc.PutResponse(response);
 		setWriteEvent(request.GetFd());
-		close(pipefd);
-		doc.RemoveExcute(pid);
+		if (close(pipefd) < 0)
+		{
+			std::cout << "close error" << std::endl;
+		}
+		else
+			std::cout << "close pipe " << pipefd << std::endl;
+		doc.RemoveExcute(pipefd);
 		doc.RemovePidInfo(pid);
 	}
 	else
@@ -238,8 +244,8 @@ void CgiProcessor::setPidEvent(int pid)
 
 void CgiProcessor::inChild(Request &request, Server &server, std::vector<std::string> &cgi, std::string& filename, int p[2])
 {
-	close(p[0]);
-	dup2(p[1], 1);
+	assert(&request);
+	assert(&server);
 	std::string path = server.GetRoot() + request.GetPath();
 	std::string query = request.GetQuery();
 	std::string body = request.GetBody();
@@ -257,6 +263,19 @@ void CgiProcessor::inChild(Request &request, Server &server, std::vector<std::st
 	std::string serverPort = "SERVER_PORT=" + std::to_string(server.GetPort()[0]);
 	std::string serverProtocol = "SERVER_PROTOCOL=" + request.GetVersion();
 	std::string serverSoftware = "SERVER_SOFTWARE=webserv";
+	std::cout << "contentLength : " << contentLength << std::endl;
+	std::cout << "queryString : " << queryString << std::endl;
+	std::cout << "requestMethod : " << requestMethod << std::endl;
+	std::cout << "scriptName : " << scriptName << std::endl;
+	std::cout << "scriptFilename : " << scriptFilename << std::endl;
+	std::cout << "pathInfo : " << pathInfo << std::endl;
+	std::cout << "pathTranslated : " << pathTranslated << std::endl;
+	std::cout << "remoteAddr : " << remoteAddr << std::endl;
+	std::cout << "remotePort : " << remotePort << std::endl;
+	std::cout << "serverName : " << serverName << std::endl;
+	std::cout << "serverPort : " << serverPort << std::endl;
+	std::cout << "serverProtocol : " << serverProtocol << std::endl;
+	std::cout << "serverSoftware : " << serverSoftware << std::endl;
 	char *envp[] = {
 		(char*)contentLength.c_str(),
 		(char*)queryString.c_str(),
@@ -273,6 +292,8 @@ void CgiProcessor::inChild(Request &request, Server &server, std::vector<std::st
 		(char*)serverSoftware.c_str(),
 		NULL
 	};
+	close(p[0]);
+	dup2(p[1], 1);
 	char *argv[] = {
 		(char *)cgi[1].c_str(),
 		(char*)filename.c_str(),

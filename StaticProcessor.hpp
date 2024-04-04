@@ -24,7 +24,7 @@ class StaticProcessor
 		void processStatic(Request& request, Document& document);
 		bool isAllowedMethod(Request& request, Location& location);
 		void setResponse(Request &request, Response &response, int status);
-		void putBody(Response& response, std::string path);
+		void putBody(Request &request, Response& response, std::string path);
 		void putAllowedMethod(Response& response, Location& location);
 		void setEventWriteable(int fd);
 		std::string getFilePath(Document& document, Request &request, Response &response, Server &server, Location& location);
