@@ -156,3 +156,13 @@ std::multimap<int, std::string>& Document::GetFdEvent()
 {
     return m_fd_identifier;
 }
+
+void Document::PutUploadFiles(int fd, UploadInfo& up)
+{
+    m_uploadFiles.insert(std::pair<int, UploadInfo>(fd, up));
+}
+
+std::map<int, UploadInfo>& Document::GetUploadFiles()
+{
+    return m_uploadFiles;
+}

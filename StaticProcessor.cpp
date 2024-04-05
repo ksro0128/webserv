@@ -211,7 +211,7 @@ std::string StaticProcessor::getFilePath(Document& document, Request &request, R
 				if (isCgi(indexPath, server) == true)
 				{
 					std::string tmp = request.GetPath() + "/" + *it;
-					std::cout << tmp << std::endl;
+					// std::cout << tmp << std::endl;
 					request.SetPath(tmp);
 					document.PutDynamic(request);
 					return "";
@@ -221,7 +221,7 @@ std::string StaticProcessor::getFilePath(Document& document, Request &request, R
 		}
 		if (filePath == location.GetRoot() + request.GetPath())
 		{
-			std::cout << "index file not found" << std::endl;
+			// std::cout << "index file not found" << std::endl;
 			if (location.GetAutoIndex() == false)
 			{
 				setResponse(request, response, 403);

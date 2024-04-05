@@ -28,6 +28,7 @@ public:
     int             GetPort();
     int             GetStatus();
     int             GetStatus(int status);
+    std::string&    GetRemain();
     int             GetReqClose();
     std::string&    GetSpecificHeader(const std::string& key);
 private: //essential

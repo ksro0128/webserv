@@ -6,6 +6,15 @@
 # include "Response.hpp"
 # include "ExecInfo.hpp"
 
+typedef struct s_UploadInfo{
+    bool                        isparsed;
+    Request                     req;
+    std::vector<std::pair<std::string, std::string> >    filedata;
+    std::string                 boundary;
+    std::string                 boundary_end;
+    int                     uploaded;
+}UploadInfo;
+
 class Document{
 public:
     Document();
@@ -52,6 +61,9 @@ public:
     void PutFdEvent(int fd, const std::string& identifier);
     std::multimap<int, std::string>& GetFdEvent();
 
+    void PutUploadFiles(int fd, UploadInfo& info);
+    std::map<int, UploadInfo>& GetUploadFiles();
+
 private:
     int m_excuteCount;
     std::map<int, Request> m_incomplete;
@@ -59,6 +71,7 @@ private:
     std::map<int, std::string> m_excute; // 실행부에서 등록,삭제,확인 pipefd, buffer
     std::map<int, ExecInfo> m_pidInfo;
     std::vector<Response> m_response;
+    std::map<int, UploadInfo> m_uploadFiles;
 	std::vector<Request> m_static;
 	std::vector<Request> m_dynamic;
 
