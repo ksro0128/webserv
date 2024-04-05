@@ -10,7 +10,7 @@ Request::Request() : m_status(0)
     m_status = 200;
     m_reqClose = 0;
     m_eof = 0;
-    m_bodyLimit = 100000;
+    m_bodyLimit = 1000;
     m_readBodyLen = 0;
     m_reqBodyLen = 0;
     m_stage = 0;
@@ -249,6 +249,7 @@ void Request::ParseRequest(int fd, std::string& buff)
             m_readBodyLen += total_len - start;
             m_reqBodyLen -= total_len - start;
         }
+		std::cout << m_readBodyLen << std::endl;
         if (m_readBodyLen > m_bodyLimit && m_status == 200)
         {
             m_status = 413;

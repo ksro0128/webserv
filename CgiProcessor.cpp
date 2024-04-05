@@ -120,7 +120,13 @@ void CgiProcessor::ExcuteCgi(Document &doc)
         {
 			close(p1[0]);
 			close(p2[1]);
-			write(p1[1], request.GetBody().c_str(), request.GetBody().length());
+			std::string body = request.GetBody();
+			while (body.length() > 0)
+			{
+				int len = write(p1[1], body.c_str(), 40000);
+				body = body.substr(len);
+			}
+			// write(p1[1], request.GetBody().c_str(), request.GetBody().length());
 			close(p1[1]);
         	ExecInfo info(request.GetFd(), p2[0], pid, request);
 			setReadEvent(p2[0]);
@@ -139,6 +145,7 @@ void CgiProcessor::Read(Document &doc, int fd)
 	int len;
 	len = read(fd, buf, 10000);
 	buf[len] = '\0';
+	std::cout << buf << std::endl;
 	// std::cout << "fd is " << fd << " and read len is " << len << std::endl;
 	if (len == -1)
 	{

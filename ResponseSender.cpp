@@ -23,7 +23,7 @@ void ResponseSender::SendResponses(Document &document) // 다양한 에러처리
 		// std::cout << "response status is " << response.GetStatusCode() << std::endl;
 		int clientSock = response.GetOriginFd();
 		std::string responseStr = response.GetResponse();
-		// std::cout << std::endl << responseStr << std::endl;
+		std::cout << std::endl << responseStr << std::endl;
 		int len = write(clientSock, responseStr.c_str(), responseStr.length());
 		// if (len == -1 || static_cast<unsigned long>(len) != responseStr.length())
 		if (len == -1)
