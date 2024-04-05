@@ -57,6 +57,7 @@ Request& Request::operator=(const Request& r)
     m_complete = r.m_complete;
     m_end = r.m_end;
     m_query = r.m_query;
+    m_chunkedFlag = r.m_chunkedFlag;
     return *this;
 }
 
@@ -192,7 +193,7 @@ void Request::ParseRequest(int fd, std::string& buff)
         {
             while (m_complete == 0)
             {
-                std::cout << "in chunked part\n";
+                // std::cout << "in chunked part\n";
                 tmp = getLine(start, m_buff);
                 if (tmp.find("\r\n") == std::string::npos)
                 {
@@ -226,7 +227,7 @@ void Request::ParseRequest(int fd, std::string& buff)
                         m_end = 1;
                     }
                     m_body += tmp.substr(0, len - 2);
-                    std::cout << "m_body is " << m_body << std::endl;
+                    // std::cout << "m_body is " << m_body << std::endl;
                     m_chunkedFlag = 0;
                 }
                 start += tmp.length();
@@ -236,6 +237,7 @@ void Request::ParseRequest(int fd, std::string& buff)
         {
             m_body += m_buff.substr(start, m_reqBodyLen);
             m_remain = m_buff.substr(start + m_reqBodyLen, total_len - start - m_reqBodyLen);
+            start = total_len;
             m_readBodyLen += m_reqBodyLen;
             m_reqBodyLen = 0;
             m_end = 1;
@@ -258,8 +260,11 @@ void Request::ParseRequest(int fd, std::string& buff)
         m_remain = m_buff.substr(start, total_len - start);
         if (m_remain.length() > 0)
         {
-            std::cout << "remain is " << m_remain << std::endl;
-            std::cout << "although one request is done, there is remain\n";
+            // std::cout << "remain is " << m_remain << std::endl;
+            // std::cout << "until now body is " << m_body << std::endl;
+            // std::cout << "although one request is done, there is remain\n";
+            // std::cout << "content length is " << m_contentLength << std::endl;
+            // std::cout << "read body length is " << m_readBodyLen << std::endl;
         }
     }
 }
@@ -276,7 +281,7 @@ void Request::PrintRequest()
         std::cout << it->first << " : " << it->second << std::endl;
     }
     std::cout << "}" << std::endl;
-    std::cout << "Body : " << m_body << std::endl;
+    std::cout << "Body : \n" << m_body << std::endl;
     std::cout << "}" << std::endl;
 }
 
@@ -548,4 +553,9 @@ std::string Request::GetHeader(const std::string& key)
     if (m_headers.find(key) == m_headers.end())
         return ("");
     return (m_headers.find(key)->second);
+}
+
+std::string& Request::GetRemain() 
+{
+    return (m_remain);
 }

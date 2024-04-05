@@ -61,7 +61,7 @@ void WebServ::RunServer()
                     EV_SET(&ev_set, clntSock, EVFILT_READ, EV_ADD, 0, 0, NULL);
                     kevent(m_kq, &ev_set, 1, NULL, 0, NULL);
                     m_document.PutFdEvent(clntSock, "client");
-                    // std::cout << "new connection from fd " << clntSock << std::endl;
+                    std::cout << "new connection from fd " << clntSock << std::endl;
                 }
                 else
                 {
@@ -87,13 +87,14 @@ void WebServ::RunServer()
             {
                 //wait 해야함
                 // response 보내기
-                std::cout << "process wait and making response event" << std::endl;
+                // std::cout << "process wait and making response event" << std::endl;
                 m_cgiProcessor.Wait(m_document, ev_list[i].ident);
             }
         }
         m_classifier.Classify(m_document);
         m_staticProcessor.Process(m_document);
         m_cgiProcessor.ExcuteCgi(m_document);
+        m_fileUploaders.ProcessUpload(m_document);
         // m_document.ClearDynamic();
         // m_document.ClearStatic();
     }

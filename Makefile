@@ -48,7 +48,8 @@ SRCS = main.cpp \
 	   ExecInfo.cpp \
 	   CgiProcessor.cpp \
 	   Classifier.cpp \
-	   StaticProcessor.cpp
+	   StaticProcessor.cpp \
+	   FileUploaders.cpp
 OBJS = $(SRCS:.cpp=.o)
 OBJS := $(addprefix obj/, $(OBJS)) # 오브젝트 파일 경로 수정
 CC = c++

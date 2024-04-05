@@ -8,6 +8,7 @@
 #include "ResponseSender.hpp"
 #include "CgiProcessor.hpp"
 #include "Classifier.hpp"
+#include "FileUploaders.hpp"
 
 class WebServ
 {
@@ -26,6 +27,7 @@ class WebServ
 		CgiProcessor m_cgiProcessor;
 		Classifier m_classifier;
 		StaticProcessor m_staticProcessor;
+		FileUploaders m_fileUploaders;
 		Config m_config;
 		std::vector<int> m_servSocks;
 		std::vector<int> m_ports;

@@ -26,10 +26,6 @@ void RequestMaker::makeRequest(Document &doc, int fd)
     char buf[1025];
     int bytes;
     bytes = read(fd, buf, 1024);
-    buf[bytes] = '\0';
-    // std::cout << "read bytes from fd " << fd << " : " << bytes << std::endl;
-    // std::cout << "read buf: " << buf << std::endl;
-    std::string buff(buf);
     if (bytes == 0)
     {
         doc.RemoveIncomplete(fd);
@@ -47,11 +43,16 @@ void RequestMaker::makeRequest(Document &doc, int fd)
         std::cout << "read error" << std::endl;
         throw std::runtime_error("read error");
     }
+    buf[bytes] = '\0';
+    std::string buff(buf);
+    // std::cout << "read bytes from fd " << fd << " : " << bytes << std::endl;
+    // std::cout << "read buf: " << buf << std::endl;
     doc.GetIncomplete(fd).ParseRequest(fd,buff);
-    if (doc.GetIncomplete(fd).IsComplete() || doc.GetIncomplete(fd).GetReqClose() == 1) // 헤더 파싱에러일 때, 왜 server not found 에러가 뜨는가????
-    // if (doc.GetIncomplete(fd).IsComplete())
+    // if (doc.GetIncomplete(fd).IsComplete() || doc.GetIncomplete(fd).GetReqClose() == 1) // 헤더 파싱에러일 때, 왜 server not found 에러가 뜨는가????
+    if (doc.GetIncomplete(fd).IsComplete())
     {
         // doc.GetIncomplete(fd).PrintRequest();
+        // return ;
         doc.PutComplete(doc.GetIncomplete(fd));
         doc.RemoveIncomplete(fd);
     }

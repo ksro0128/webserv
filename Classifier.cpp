@@ -31,7 +31,15 @@ void Classifier::classifyRequest(Document& document, Request &request)
 		return ;
 	}
 	Server &server = m_config.GetServer(request.GetPort(), request.GetHost());
-	if (server.GetCgiFlag() == false)
+	if (request.GetMethod() == "POST" && request.GetSpecificHeader("content-type").find("multipart/form-data") != std::string::npos)
+	{
+		UploadInfo info;
+		info.isparsed = false;
+		info.req = request;
+		info.uploaded = 0;
+		document.PutUploadFiles(request.GetFd(), info);
+	}
+	else if (server.GetCgiFlag() == false)
 	{
 		document.PutStatic(request);
 	}
