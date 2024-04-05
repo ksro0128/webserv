@@ -280,9 +280,9 @@ void Request::PrintRequest()
     {
         std::cout << it->first << " : " << it->second << std::endl;
     }
-    std::cout << "}" << std::endl;
-    std::cout << "Body : \n" << m_body << std::endl;
-    std::cout << "}" << std::endl;
+    // std::cout << "}" << std::endl;
+    // std::cout << "Body : \n" << m_body << std::endl;
+    // std::cout << "}" << std::endl;
 }
 
 int Request::checkMethod(const std::string& s) 

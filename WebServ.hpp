@@ -13,7 +13,7 @@
 class WebServ
 {
 	public:
-		WebServ(std::string configPath);
+		WebServ(std::string configPath, std::vector<std::string> envp);
 		~WebServ();
 		void RunServer();
 	private:

@@ -45,10 +45,11 @@ CgiProcessor::~CgiProcessor()
 {
 }
 
-void CgiProcessor::Set(Config &config, int kq)
+void CgiProcessor::Set(Config &config, int kq, std::vector<std::string> envp)
 {
     m_config = config;
     m_kq = kq;
+	m_envp = envp;
 }
 
 void CgiProcessor::ExcuteCgi(Document &doc)
@@ -59,6 +60,14 @@ void CgiProcessor::ExcuteCgi(Document &doc)
         // std::string& method = request.GetMethod();
         Server& server = m_config.GetServer(request.GetPort(), request.GetHost());
 		Location& location = server.GetLocationBlock(request.GetPath());
+		if (isAllowedMethod(request, location) == false)
+		{
+			Response response;
+			setResponseError(request, response, server, 405);
+			doc.PutResponse(response);
+			setWriteEvent(request.GetFd());
+			continue;
+		}
         std::string filename = request.GetPath();
         std::vector<std::string> cgi = getCgiInfo(request, server);
         std::string extension = "." + cgi[0];
@@ -153,15 +162,16 @@ void CgiProcessor::Wait(Document &doc, int pid)
 		response.SetStatusMessage("OK");
 		response.SetOriginFd(request.GetFd());
 		response.SetHeader("Content-Type", "text/html");
-		response.SetHeader("Content-Length", std::to_string(doc.GetBuffer(pipefd).length()));
 		response.SetBody(doc.GetBuffer(pipefd));
+		if (request.GetMethod() == "HEAD")
+			response.RemoveBody();
 		doc.PutResponse(response);
 		setWriteEvent(request.GetFd());
 		if (close(pipefd) < 0)
 		{
 			std::cout << "close error" << std::endl;
 		}
-		else
+		// else
 			// std::cout << "close pipe " << pipefd << std::endl;
 		doc.RemoveExcute(pipefd);
 		doc.RemovePidInfo(pid);
@@ -246,23 +256,47 @@ void CgiProcessor::inChild(Request &request, Server &server, std::vector<std::st
 {
 	assert(&request);
 	assert(&server);
-	std::string path = server.GetRoot() + request.GetPath();
+	Location &location = server.GetLocationBlock(request.GetPath());
+	std::string path = location.GetRoot() + request.GetPath();
 	std::string query = request.GetQuery();
 	std::string body = request.GetBody();
 	std::string method = request.GetMethod();
-	std::string contentLength = "CONTENT_LENGTH=" + std::to_string(body.length());
-	std::string queryString = "QUERY_STRING=" + query;
-	std::string requestMethod = "REQUEST_METHOD=" + method;
-	std::string scriptName = "SCRIPT_NAME=" + request.GetPath();
-	std::string scriptFilename = "SCRIPT_FILENAME=" + path;
-	std::string pathInfo = "PATH_INFO=" + request.GetPath();
-	std::string pathTranslated = "PATH_TRANSLATED=" + path;
-	std::string remoteAddr = "REMOTE_ADDR=" + request.GetHost();
-	std::string remotePort = "REMOTE_PORT=" + std::to_string(request.GetPort());
-	std::string serverName = "SERVER_NAME=" + server.GetServerName()[0];
-	std::string serverPort = "SERVER_PORT=" + std::to_string(server.GetPort()[0]);
-	std::string serverProtocol = "SERVER_PROTOCOL=" + request.GetVersion();
-	std::string serverSoftware = "SERVER_SOFTWARE=webserv";
+
+	addCgiEnv("REQUEST_METHOD", method);
+	// addCgiEnv("SCRIPT_NAME", path);
+	// addCgiEnv("CONTENT_TYPE", request.GetHeader("content-type"));
+	addCgiEnv("CONTENT_LENGTH", inttoString(body.length()));
+	// addCgiEnv("GATEWAY_INTERFACE", "CGI/1.1");
+	// addCgiEnv("HTTP_ACCEPT", request.GetHeader("accept"));
+	// addCgiEnv("HTTP_ACCEPT_CHARSET", request.GetHeader("accept-charset"));
+	// addCgiEnv("HTTP_HOST", request.GetHeader("host"));
+	// addCgiEnv("HTTP_USER_AGENT", request.GetHeader("user-agent"));
+	addCgiEnv("PATH_INFO", "./http/directory/");
+	// addCgiEnv("PATH_TRANSLATED", path);
+	// addCgiEnv("QUERY_STRING", query);
+	// addCgiEnv("SERVER_NAME", server.GetServerName()[0]);
+	// addCgiEnv("SERVER_PORT", inttoString(server.GetPort()[0]));
+	addCgiEnv("SERVER_PROTOCOL", request.GetVersion());
+	// addCgiEnv("SERVER_SOFTWARE", "webserv");
+
+
+
+
+
+
+	// std::string contentLength = "CONTENT_LENGTH=" + std::to_string(body.length());
+	// std::string queryString = "QUERY_STRING=" + query;
+	// std::string requestMethod = "REQUEST_METHOD=" + method;
+	// std::string scriptName = "SCRIPT_NAME=" + request.GetPath();
+	// std::string scriptFilename = "SCRIPT_FILENAME=" + path;
+	// std::string pathInfo = "PATH_INFO=" + request.GetPath();
+	// std::string pathTranslated = "PATH_TRANSLATED=" + path;
+	// std::string remoteAddr = "REMOTE_ADDR=" + request.GetHost();
+	// std::string remotePort = "REMOTE_PORT=" + std::to_string(request.GetPort());
+	// std::string serverName = "SERVER_NAME=" + server.GetServerName()[0];
+	// std::string serverPort = "SERVER_PORT=" + std::to_string(server.GetPort()[0]);
+	// std::string serverProtocol = "SERVER_PROTOCOL=" + request.GetVersion();
+	// std::string serverSoftware = "SERVER_SOFTWARE=webserv";
 	// std::cout << "contentLength : " << contentLength << std::endl;
 	// std::cout << "queryString : " << queryString << std::endl;
 	// std::cout << "requestMethod : " << requestMethod << std::endl;
@@ -276,26 +310,35 @@ void CgiProcessor::inChild(Request &request, Server &server, std::vector<std::st
 	// std::cout << "serverPort : " << serverPort << std::endl;
 	// std::cout << "serverProtocol : " << serverProtocol << std::endl;
 	// std::cout << "serverSoftware : " << serverSoftware << std::endl;
-	char *envp[] = {
-		(char*)contentLength.c_str(),
-		(char*)queryString.c_str(),
-		(char*)requestMethod.c_str(),
-		(char*)scriptName.c_str(),
-		(char*)scriptFilename.c_str(),
-		(char*)pathInfo.c_str(),
-		(char*)pathTranslated.c_str(),
-		(char*)remoteAddr.c_str(),
-		(char*)remotePort.c_str(),
-		(char*)serverName.c_str(),
-		(char*)serverPort.c_str(),
-		(char*)serverProtocol.c_str(),
-		(char*)serverSoftware.c_str(),
-		NULL
-	};
-	write(p[0], query.c_str(), query.length());
-	dup2(p[0], STDIN_FILENO);
-	dup2(p[1], 1);
+	// char *envp[] = {
+	// 	(char*)contentLength.c_str(),
+	// 	(char*)queryString.c_str(),
+	// 	(char*)requestMethod.c_str(),
+	// 	(char*)scriptName.c_str(),
+	// 	(char*)scriptFilename.c_str(),
+	// 	(char*)pathInfo.c_str(),
+	// 	(char*)pathTranslated.c_str(),
+	// 	(char*)remoteAddr.c_str(),
+	// 	(char*)remotePort.c_str(),
+	// 	(char*)serverName.c_str(),
+	// 	(char*)serverPort.c_str(),
+	// 	(char*)serverProtocol.c_str(),
+	// 	(char*)serverSoftware.c_str(),
+	// 	NULL
+	// };
+	char *envp[m_envp.size() + 1];
+	for (size_t i = 0; i < m_envp.size(); i++)
+		envp[i] = (char*)m_envp[i].c_str();
+	envp[m_envp.size()] = NULL;
+	// dup2(p[0], STDIN_FILENO);
+	// if (request.GetMethod() == "POST")
+	// {
+	// write(0, "\n", 1);
+	write(0, body.c_str(), body.length());
+	// }	
 	close(p[0]);
+	close(0);
+	dup2(p[1], 1);
 	char *argv[] = {
 		(char *)cgi[1].c_str(),
 		(char*)filename.c_str(),
@@ -306,4 +349,28 @@ void CgiProcessor::inChild(Request &request, Server &server, std::vector<std::st
 		perror("execve error");
 		exit(99);
 	}
+}
+
+bool CgiProcessor::isAllowedMethod(Request &request, Location &location)
+{
+	std::string method = request.GetMethod();
+	std::vector<std::string> &methodSet = location.GetMethod();
+	if (std::find(methodSet.begin(), methodSet.end(), method) == methodSet.end())
+		return false;
+	else
+		return true;
+}
+
+void CgiProcessor::addCgiEnv(std::string key, std::string value)
+{
+	m_envp.push_back(key + "=" + value);
+}
+
+std::string CgiProcessor::inttoString(int num)
+{
+	std::string str;
+	std::stringstream ss;
+	ss << num;
+	ss >> str;
+	return str;
 }

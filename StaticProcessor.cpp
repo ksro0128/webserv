@@ -110,9 +110,12 @@ void StaticProcessor::putBody(Request& request, Response& response, std::string 
 	std::ifstream file(path.c_str());
 	std::ostringstream oss;
 	oss << file.rdbuf();
-	response.SetHeader("Content-Length", std::to_string(oss.str().length()));
-	if (request.GetMethod() != "HEAD")
-		response.SetBody(oss.str());
+	// response.SetHeader("Content-Length", std::to_string(oss.str().length()));
+	response.SetBody(oss.str());
+	if (request.GetMethod() == "HEAD")
+	{
+		response.RemoveBody();
+	}
 	response.SetHeader("Content-type", m_config.GetMimeType(m_config.GetExtension(path)));
 }
 
@@ -182,8 +185,8 @@ std::string StaticProcessor::getFilePath(Document& document, Request &request, R
 		{
 			if (location.GetAutoIndex() == false)
 			{
-				setResponse(request, response, 403);
-				putBody(request, response, server.GetErrorPage(403));
+				setResponse(request, response, 404);
+				putBody(request, response, server.GetErrorPage(404));
 				setEventWriteable(request.GetFd());
 				document.PutResponse(response);
 				return "";
@@ -224,8 +227,8 @@ std::string StaticProcessor::getFilePath(Document& document, Request &request, R
 			// std::cout << "index file not found" << std::endl;
 			if (location.GetAutoIndex() == false)
 			{
-				setResponse(request, response, 403);
-				putBody(request, response, server.GetErrorPage(403));
+				setResponse(request, response, 404);
+				putBody(request, response, server.GetErrorPage(404));
 				setEventWriteable(request.GetFd());
 				document.PutResponse(response);
 				return "";

@@ -1,6 +1,6 @@
 #include "main.hpp"
 
-int main(int argc, char **argv)
+int main(int argc, char **argv, char **envp)
 {
 	try
 	{
@@ -15,7 +15,10 @@ int main(int argc, char **argv)
 			return 1;
 		}
 		
-		WebServ webServ(configPath);
+		std::vector<std::string> env;
+		for (int i = 0; envp[i]; i++)
+			env.push_back(envp[i]);
+		WebServ webServ(configPath, env);
 		webServ.RunServer();
 	}
 	catch (std::exception &e)

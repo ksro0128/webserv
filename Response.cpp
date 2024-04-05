@@ -58,6 +58,14 @@ void Response::SetHeader(std::string key, std::string value)
 void Response::SetBody(std::string body)
 {
 	m_body = body;
+	std::ostringstream oss;
+	oss << m_body.length();
+	m_headers.insert(std::pair<std::string, std::string>("Content-Length", oss.str()));
+}
+
+void Response::RemoveBody()
+{
+	m_body = "";
 }
 
 void Response::SetOriginFd(int origin_fd)
@@ -96,7 +104,6 @@ std::string Response::GetResponse()
 	std::string date = makeDate();
 	m_headers.insert(std::pair<std::string, std::string>("Date", date));
 	m_headers.insert(std::pair<std::string, std::string>("Server", "Webserv"));
-	// m_headers.insert(std::pair<std::string, std::string>("Content-Length", std::to_string(m_body.length())));
 
 	for (std::multimap<std::string, std::string>::iterator it = m_headers.begin(); it != m_headers.end(); it++)
 	{
@@ -138,6 +145,9 @@ int Response::GetOriginFd()
 void Response::AddBody(std::string& body)
 {
 	m_body += body;
+	std::ostringstream oss;
+	oss << m_body.length();
+	m_headers.insert(std::pair<std::string, std::string>("Content-Length", oss.str()));
 }
 
 std::string Response::GetHeader(const std::string& key)
