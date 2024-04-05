@@ -1,92 +1,258 @@
-#include <iostream>
-#include <string>
-#include <map>
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <sys/time.h>
 #include <dirent.h>
+#include <sys/event.h>
+#include <assert.h>
+#include <errno.h>
+#include <stdio.h>
+#include <math.h>
+#include <stdlib.h>
 
-int main()
+int kq, passed, failed;
+
+/*
+ * Wait for given kevent, which should return in 'expected' usecs.
+ */
+int
+do_simple_kevent(struct kevent64_s *kev, uint64_t expected)
 {
-    std::string a = "c0";
-    std::cout << strtol(a.c_str(), NULL, 16) << std::endl;
-    // std::string start = "<html>\n<head><title>Index of /</title></head>\n<body>\n<h1>Index of /</h1><hr><pre>";
-    // std::string end = "</pre><hr></body>\n</html>";
-    // std::string before = "<a href=\"";
-    // std::string after = "\">";
-    // std::string folder = "./";
-    // timespec  date;
-    // long size;
-    // std::string size_str;
-    // std::string info;
-    // DIR* dp = opendir(folder.c_str());
-    // struct stat st;
-    // struct dirent* dir;
-    // struct tm *nowtm;
-    // char tmbuf[64], buf[64];
-    // std::string whitespace;
-    // int fd = open("index.html", O_CREAT | O_RDWR | O_TRUNC, 0644);
-    // write(fd, start.c_str(), start.size());
-    // while ((dir = readdir(dp)) != NULL)
-    // {
-    //     whitespace = "";
-    //     if (dir->d_name[0] == '.' && dir->d_name[1] == '\0')
-    //         continue;
-    //     std::string name = dir->d_name;
-    //     stat((folder + name).c_str(), &st);
-    //     if (S_ISDIR(st.st_mode))
-    //     {
-    //         date = st.st_mtimespec;
-    //         int len = name.length();
-    //         for (int i = 30; i > len; i--)
-    //             whitespace += " ";
-    //         write(fd, before.c_str(), before.size());
-    //         write(fd, name.c_str(), name.size());
-    //         write(fd, after.c_str(), after.size());
-    //         info = name + "</a>" + whitespace + '-' + "\n";
-    //         write(fd, info.c_str(), info.size());
-    //     }
-    // }
-    // closedir(dp);
-    // dp = opendir(folder.c_str());
-    // while ((dir = readdir(dp)) != NULL)
-    // {
-    //     whitespace = "";
-    //     if (dir->d_name[0] == '.')
-    //         continue;
-    //     std::string name = dir->d_name;
-    //     stat((folder + name).c_str(), &st);
-    //     if (!S_ISDIR(st.st_mode))
-    //     {
-    //         date = st.st_mtimespec;
-    //         int len = name.length();
-    //         for (int i = 30; i > len; i--)
-    //             whitespace += " ";
-    //         nowtm = localtime(&date.tv_sec);
-    //         strftime(tmbuf, sizeof(tmbuf), "%Y-%m-%d %H:%M:%S", nowtm);
-    //         std::string date_str = tmbuf;
-    //         size = st.st_size;
-    //         if (size > 1024)
-    //             size_str = std::to_string(size / 1024) + "K";
-    //         else
-    //             size_str = std::to_string(size) + "B";
-    //         write(fd, before.c_str(), before.size());
-    //         write(fd, name.c_str(), name.size());
-    //         write(fd, after.c_str(), after.size());
-    //         info = name + "</a>" + whitespace + size_str + "\t" + tmbuf + "\n";
-    //         write(fd, info.c_str(), info.size());
-    //     }
-    // }
-    // write(fd, end.c_str(), end.size());
-    // closedir(dp);
-    // close(fd);
-    return 0;
+	int ret;
+	uint64_t elapsed_usecs, delta_usecs;
+	struct timespec timeout;
+	struct timeval before, after;
+
+	/* time out after 1 sec extra delay */
+	timeout.tv_sec = (expected / (1000 * 1000)) + 1; 
+	timeout.tv_nsec = (expected % (1000 * 1000)) * 1000;
+
+	/* measure time for the kevent */
+	gettimeofday(&before, NULL);
+	ret = kevent64(kq, kev, 1, kev, 1, 0, &timeout);
+	gettimeofday(&after, NULL);
+
+	if (ret < 1 || (kev->flags & EV_ERROR)) {
+		printf("\tfailure: kevent returned %d, error %d\n", ret, 
+				(ret == -1 ? errno : (int) kev->data));
+		return 0;
+	}
+
+	/* did it work? */
+	elapsed_usecs = (after.tv_sec - before.tv_sec) * (1000 * 1000) + 
+		(after.tv_usec - before.tv_usec);
+	delta_usecs = abs(elapsed_usecs - (expected));
+
+	/* failure if we're 30% off, or 50 mics late */
+	if (delta_usecs > (30 * expected / 100.0) && delta_usecs > 50) {
+		printf("\tfailure: expected %lld usec, measured %lld usec.\n", 
+				expected, elapsed_usecs);
+		return 0;
+	} else {
+		printf("\tsuccess.\n");
+		return 1;
+	}
 }
 
+void
+test_absolute_kevent(int time, int scale)
+{
+	struct timeval tv;
+	struct kevent64_s kev;
+	uint64_t nowus, expected, deadline;
+	int ret;
+	int timescale = 0;
 
-1234567890
+	gettimeofday(&tv, NULL);
+	nowus = tv.tv_sec * (1000 * 1000LL) + tv.tv_usec;
 
-123 에서 끝났고 45가 \r\n이면
-67890이 remain에 저장되어야함
+	switch (scale) {
+	case NOTE_SECONDS:
+		printf("Testing %d sec absolute timer...\n", time);
+		timescale = 1000 * 1000;
+		break;
+	case NOTE_USECONDS:
+		printf("Testing %d usec absolute timer...\n", time);
+		timescale = 1;
+		break;
+	case 0:
+		printf("Testing %d msec absolute timer...\n", time);
+		timescale = 1000;
+		break;
+	default:
+		printf("Failure: scale 0x%x not recognized.\n", scale);
+		return;
+	}
+
+	expected = time * timescale;
+	deadline = nowus / timescale + time;
+
+	/* deadlines in the past should fire immediately */
+	if (time < 0)
+		expected = 0;
+	
+	EV_SET64(&kev, 1, EVFILT_TIMER, EV_ADD, 
+			NOTE_ABSOLUTE | scale, deadline, 0,0,0);
+	ret = do_simple_kevent(&kev, expected);
+
+	if (ret)
+		passed++;
+	else
+		failed++;
+}
+
+void
+test_oneshot_kevent(int time, int scale)
+{
+	int ret;
+	uint64_t expected = 0;
+	struct kevent64_s kev;
+
+	switch (scale) {
+	case NOTE_SECONDS:
+		printf("Testing %d sec interval timer...\n", time);
+		expected = time * (1000 * 1000);
+		break;
+	case NOTE_USECONDS:
+		printf("Testing %d usec interval timer...\n", time);
+		expected = time;
+		break;
+	case NOTE_NSECONDS:
+		printf("Testing %d nsec interval timer...\n", time);
+		expected = time / 1000;
+		break;
+	case 0:
+		printf("Testing %d msec interval timer...\n", time);
+		expected = time * 1000;
+		break;
+	default:
+		printf("Failure: scale 0x%x not recognized.\n", scale);
+		return;
+	}
+
+	/* deadlines in the past should fire immediately */
+	if (time < 0)
+		expected = 0;
+	
+	EV_SET64(&kev, 2, EVFILT_TIMER, EV_ADD | EV_ONESHOT, scale, time, 
+			0, 0, 0);
+	ret = do_simple_kevent(&kev, expected);
+
+	if (ret)
+		passed++;
+	else
+		failed++;
+
+}
+
+void
+test_repeating_kevent(int usec)
+{
+	struct kevent64_s kev;
+	int expected_pops, ret;
+
+	expected_pops = 1000 * 1000 / usec;
+	printf("Testing repeating kevent for %d pops in a second...\n", 
+		expected_pops);
+
+	EV_SET64(&kev, 3, EVFILT_TIMER, EV_ADD, NOTE_USECONDS, usec, 0, 0, 0);
+	ret = kevent64(kq, &kev, 1, NULL, 0, 0, NULL);
+	if (ret != 0) {
+		printf("\tfailure: kevent64 returned %d\n", ret);
+		failed++;
+		return;
+	}
+
+	/* sleep 1 second */
+	usleep(1000 * 1000);
+	ret = kevent64(kq, NULL, 0, &kev, 1, 0, NULL);
+	if (ret != 1 || (kev.flags & EV_ERROR)) {
+		printf("\tfailure: kevent64 returned %d\n", ret);
+		failed++;
+		return;
+	}
+
+	/* check how many times the timer fired: within 5%? */
+	if (kev.data > expected_pops + (expected_pops / 20) ||
+		kev.data < expected_pops - (expected_pops / 20)) {
+		printf("\tfailure: saw %lld pops.\n", kev.data);
+		failed++;
+	} else {
+		printf("\tsuccess: saw %lld pops.\n", kev.data);
+		passed++;
+	}
+
+	EV_SET64(&kev, 3, EVFILT_TIMER, EV_DELETE, 0, 0, 0, 0, 0);
+	ret = kevent64(kq, &kev, 1, NULL, 0, 0, NULL);
+	if (ret != 0) {
+		printf("\tfailed to stop repeating timer: %d\n", ret);
+	}
+}
+
+void test_updated_kevent(int first, int second)
+{
+	struct kevent64_s kev;
+	int ret;
+
+	printf("Testing update from %d to %d msecs...\n", first, second);
+
+	EV_SET64(&kev, 4, EVFILT_TIMER, EV_ADD|EV_ONESHOT, 0, first, 0, 0, 0);
+	ret = kevent64(kq, &kev, 1, NULL, 0, 0, NULL); 
+	if (ret != 0) {
+		printf("\tfailure: initial kevent returned %d\n", ret);
+		failed++;
+		return;
+	}
+
+	EV_SET64(&kev, 4, EVFILT_TIMER, EV_ONESHOT, 0, second, 0, 0, 0);
+	if (second < 0)
+		second = 0;	
+	ret = do_simple_kevent(&kev, second * 1000);
+	if (ret)
+		passed++;
+	else
+		failed++;
+}
+
+int
+main(void)
+{
+	struct timeval tv;
+	struct kevent64_s kev;
+	uint64_t nowms, deadline;
+
+	kq = kqueue();
+	assert(kq > 0);
+	passed = 0;
+	failed = 0;
+
+	test_absolute_kevent(100, 0);
+	test_absolute_kevent(200, 0);
+	test_absolute_kevent(300, 0);
+	test_absolute_kevent(1000, 0);
+	test_absolute_kevent(500, NOTE_USECONDS);
+	test_absolute_kevent(100, NOTE_USECONDS);
+	test_absolute_kevent(5, NOTE_SECONDS);
+	test_absolute_kevent(-1000, 0);
+
+	test_oneshot_kevent(1, NOTE_SECONDS);
+	test_oneshot_kevent(10, 0);
+	test_oneshot_kevent(200, NOTE_USECONDS);
+	test_oneshot_kevent(300000, NOTE_NSECONDS);
+	test_oneshot_kevent(-1, NOTE_SECONDS);
+
+	test_repeating_kevent(100 * 1000);
+	test_repeating_kevent(5 * 1000);
+	test_repeating_kevent(200);
+	test_repeating_kevent(50);
+	test_repeating_kevent(10);
+
+	test_updated_kevent(1000, 2000);
+	test_updated_kevent(2000, 1000);
+	test_updated_kevent(1000, -1);
+
+	printf("\nFinished: %d tests passed, %d failed.\n", passed, failed);
+
+	exit(EXIT_SUCCESS);
+}

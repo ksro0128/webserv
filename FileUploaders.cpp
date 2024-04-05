@@ -39,7 +39,13 @@ void FileUploaders::ProcessUpload(Document &doc)
             // std::ofstream file(filename.c_str(), std::ios::out | std::ios::binary);
             // file.write(filedata.c_str(), filedata.length());
             // file.close();
-            info.isparsed = true;
+            if (info.isparsed == 0)
+            {
+                // std::cout << "file parsing error\n";
+                close(info.req.GetFd());
+                doc.GetFdEvent().erase(info.req.GetFd());
+                continue;
+            }
         }
     }
     doc.GetUploadFiles().clear();
@@ -55,6 +61,7 @@ void FileUploaders::parseFiles(UploadInfo &info)
 {
     unsigned long start = 0;
     std::string& buffer = info.req.GetBody();
+    // std::cout << "buffer: " << buffer << std::endl;
     while (1)
     {
         unsigned long pos = buffer.find(info.boundary, start);
@@ -79,16 +86,26 @@ void FileUploaders::parseFiles(UploadInfo &info)
             continue;
         }
         // std::cout << "dsjvcuihytwiuweuiteuwiteiwrhwqirqeqe\n";
-        // std::cout << "filename: " << filename << " hhh  " <<  std::endl;
+        // std::cout << "filename: " << filename << std::endl;
         // std::cout << "dsafhksdafhlkadsf\n";
         std::string line2 = getLine(start, buffer, "\n");
         start += line2.length();
         std::string line3 = getLine(start, buffer, "\n");
         start += line3.length();
-        std::string filedata = buffer.substr(start, buffer.find("\n" + info.boundary, start) - start);
+        unsigned long subpos3 = buffer.find("\n" + info.boundary, start);
+        if (subpos3 == std::string::npos)
+        {
+            subpos3 = buffer.find("\n" + info.boundary_end, start);
+            if (subpos3 == std::string::npos)
+                return ;
+        }
+        std::string filedata = buffer.substr(start, subpos3 - start);
+        start += filedata.length();
+        info.filedata.push_back(std::pair<std::string, std::string>(filename, filedata));
         // std::cout << "filedata: " << filedata;
-        break;
+        // std::cout << "\n\nend\n\n";
     }
+    info.isparsed = 1;
 }
 
 std::string FileUploaders::getLine(int start, std::string& s, const std::string& dilim) 
