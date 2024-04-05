@@ -95,8 +95,9 @@ void CgiProcessor::ExcuteCgi(Document &doc)
         	std::cout << "Cgi path error" << std::endl;
         	continue;
         }
-        int p[2];
-        if (pipe(p) == -1)
+        int p1[2];
+		int p2[2];
+        if (pipe(p1) == -1 || pipe(p2) == -1)
         {
         	Response response;
         	setResponseError(request, response, server, 500);
@@ -114,15 +115,18 @@ void CgiProcessor::ExcuteCgi(Document &doc)
         	continue;
         }
         if (pid == 0)
-			inChild(request, server, cgi, filename, p);
+			inChild(request, server, cgi, filename, p1, p2);
         else
         {
-        	close(p[1]);
-        	ExecInfo info(request.GetFd(), p[0], pid, request);
-			setReadEvent(p[0]);
+			close(p1[0]);
+			close(p2[1]);
+			write(p1[1], request.GetBody().c_str(), request.GetBody().length());
+			close(p1[1]);
+        	ExecInfo info(request.GetFd(), p2[0], pid, request);
+			setReadEvent(p2[0]);
 			setPidEvent(pid);
 			doc.PutPidInfo(pid, info);
-			doc.PutExcute(p[0]);
+			doc.PutExcute(p2[0]);
 			// std::cout << "excute cgi! client fd is" << request.GetFd() << " and pipe fd is" << p[0] << std::endl;
         }
     }
@@ -252,7 +256,7 @@ void CgiProcessor::setPidEvent(int pid)
 	kevent(m_kq, &ev, 1, NULL, 0, NULL);
 }
 
-void CgiProcessor::inChild(Request &request, Server &server, std::vector<std::string> &cgi, std::string& filename, int p[2])
+void CgiProcessor::inChild(Request &request, Server &server, std::vector<std::string> &cgi, std::string& filename, int p1[2], int p2[2])
 {
 	assert(&request);
 	assert(&server);
@@ -265,7 +269,7 @@ void CgiProcessor::inChild(Request &request, Server &server, std::vector<std::st
 	addCgiEnv("REQUEST_METHOD", method);
 	// addCgiEnv("SCRIPT_NAME", path);
 	// addCgiEnv("CONTENT_TYPE", request.GetHeader("content-type"));
-	addCgiEnv("CONTENT_LENGTH", inttoString(body.length()));
+	// addCgiEnv("CONTENT_LENGTH", inttoString(body.length()));
 	// addCgiEnv("GATEWAY_INTERFACE", "CGI/1.1");
 	// addCgiEnv("HTTP_ACCEPT", request.GetHeader("accept"));
 	// addCgiEnv("HTTP_ACCEPT_CHARSET", request.GetHeader("accept-charset"));
@@ -334,11 +338,12 @@ void CgiProcessor::inChild(Request &request, Server &server, std::vector<std::st
 	// if (request.GetMethod() == "POST")
 	// {
 	// write(0, "\n", 1);
-	write(0, body.c_str(), body.length());
-	// }	
-	close(p[0]);
-	close(0);
-	dup2(p[1], 1);
+	close(p1[1]);
+	close(p2[0]);
+	dup2(p1[0], 0);
+	dup2(p2[1], 1);
+	close(p1[0]);
+	close(p2[1]);
 	char *argv[] = {
 		(char *)cgi[1].c_str(),
 		(char*)filename.c_str(),
