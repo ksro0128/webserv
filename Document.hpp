@@ -64,17 +64,35 @@ public:
     void PutUploadFiles(int fd, UploadInfo& info);
     std::map<int, UploadInfo>& GetUploadFiles();
 
+
+    void PutExcuteInfo(size_t hash, ExecInfo* info);
+    void RemoveExcuteInfo(size_t hash);
+    ExecInfo* GetExcuteInfoByHash(size_t hash);
+    void PutPipeInfo(int pipefd, size_t hash);
+    void RemovePipeInfo(int pipefd);
+    size_t GetHashByPipe(int pipefd);
+    std::map<int, size_t>& GetPipeInfo();
+    void PutPidInfo2(int pid, size_t hash);
+    void RemovePidInfo2(int pid);
+    std::map<int, size_t>& GetPidInfo2();
+    size_t GetHashByPid(int pid);
+
 private:
     int m_excuteCount;
     std::map<int, Request> m_incomplete;
     std::vector<Request> m_complete; // 실행부로 넘기는거
+    
     std::map<int, std::string> m_excute; // 실행부에서 등록,삭제,확인 pipefd, buffer
     std::map<int, ExecInfo> m_pidInfo;
+
+    std::map<size_t, ExecInfo*> m_excuteInfo;
+    std::map<int, size_t> m_pipeInfo;
+    std::map<int, size_t> m_pidInfo2;
+
     std::vector<Response> m_response;
     std::map<int, UploadInfo> m_uploadFiles;
 	std::vector<Request> m_static;
 	std::vector<Request> m_dynamic;
-
     std::multimap<int, std::string> m_fd_identifier;
 };
 

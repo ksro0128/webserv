@@ -166,3 +166,74 @@ std::map<int, UploadInfo>& Document::GetUploadFiles()
 {
     return m_uploadFiles;
 }
+
+void Document::PutExcuteInfo(size_t hash, ExecInfo* info)
+{
+    m_excuteInfo[hash] = info;
+}
+
+void Document::RemoveExcuteInfo(size_t hash)
+{
+    if (m_excuteInfo.find(hash) != m_excuteInfo.end())
+    {
+        delete m_excuteInfo[hash];
+        m_excuteInfo.erase(hash);
+    }
+}
+
+ExecInfo* Document::GetExcuteInfoByHash(size_t hash)
+{
+    if (m_excuteInfo.find(hash) == m_excuteInfo.end())
+        return (0);
+    else
+        return m_excuteInfo[hash];
+}
+
+void Document::PutPipeInfo(int pipefd, size_t hash)
+{
+    m_pipeInfo[pipefd] = hash;
+}
+
+void Document::RemovePipeInfo(int pipefd)
+{
+    if (m_pipeInfo.find(pipefd) != m_pipeInfo.end())
+        m_pipeInfo.erase(pipefd);
+}
+
+size_t Document::GetHashByPipe(int pipefd)
+{
+    if (m_pipeInfo.find(pipefd) == m_pipeInfo.end())
+        return 0;
+    else
+        return m_pipeInfo[pipefd];
+}
+
+size_t Document::GetHashByPid(int pid)
+{
+    if (m_pidInfo2.find(pid) == m_pidInfo2.end())
+        return 0;
+    else
+        return m_pidInfo2[pid];
+}
+
+void Document::PutPidInfo2(int pid, size_t hash)
+{
+    m_pidInfo2[pid] = hash;
+}
+
+void Document::RemovePidInfo2(int pid)
+{
+    if (m_pidInfo2.find(pid) != m_pidInfo2.end())
+        m_pidInfo2.erase(pid);
+}
+
+std::map<int, size_t>& Document::GetPipeInfo()
+{
+    return m_pipeInfo;
+}
+
+std::map<int, size_t>& Document::GetPidInfo2()
+{
+    return m_pidInfo2;
+}
+

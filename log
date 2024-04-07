@@ -1,0 +1,166 @@
+new connection from fd 8
+Request error:200{
+Method : <GET>
+Path : </>
+Version : <HTTP/1.1>
+Headers{
+accept-encoding : gzip
+host : 127.0.0.1:1111
+user-agent : Go-http-client/1.1
+0
+Request error:200{
+Method : <POST>
+Path : </>
+Version : <HTTP/1.1>
+Headers{
+accept-encoding : gzip
+content-type : test/file
+host : 127.0.0.1:1111
+transfer-encoding : chunked
+user-agent : Go-http-client/1.1
+Request error:200{
+Method : <HEAD>
+Path : </>
+Version : <HTTP/1.1>
+Headers{
+host : 127.0.0.1:1111
+user-agent : Go-http-client/1.1
+Request error:200{
+Method : <GET>
+Path : </directory>
+Version : <HTTP/1.1>
+Headers{
+accept-encoding : gzip
+host : 127.0.0.1:1111
+user-agent : Go-http-client/1.1
+Request error:200{
+Method : <GET>
+Path : </directory/>
+Version : <HTTP/1.1>
+Headers{
+accept-encoding : gzip
+host : 127.0.0.1:1111
+referer : http://127.0.0.1:1111/directory
+user-agent : Go-http-client/1.1
+Request error:200{
+Method : <GET>
+Path : </directory/youpi.bad_extension>
+Version : <HTTP/1.1>
+Headers{
+accept-encoding : gzip
+host : 127.0.0.1:1111
+user-agent : Go-http-client/1.1
+Request error:200{
+Method : <GET>
+Path : </directory/youpi.bla>
+Version : <HTTP/1.1>
+Headers{
+accept-encoding : gzip
+host : 127.0.0.1:1111
+user-agent : Go-http-client/1.1
+excute cgi! client fd is8 and write pipe is11 read pipe is 12
+cause write pipe is closed, read is end
+process wait and making response event
+wait pid is 32653
+lets put response and register to write event
+size of excute info is 0
+size of pipe info is 0
+first member of pipe info is 0
+size of pid info is 0
+end wait
+Request error:200{
+Method : <GET>
+Path : </directory/oulalala>
+Version : <HTTP/1.1>
+Headers{
+accept-encoding : gzip
+host : 127.0.0.1:1111
+user-agent : Go-http-client/1.1
+Request error:200{
+Method : <GET>
+Path : </directory/nop>
+Version : <HTTP/1.1>
+Headers{
+accept-encoding : gzip
+host : 127.0.0.1:1111
+user-agent : Go-http-client/1.1
+Request error:200{
+Method : <GET>
+Path : </directory/nop/>
+Version : <HTTP/1.1>
+Headers{
+accept-encoding : gzip
+host : 127.0.0.1:1111
+referer : http://127.0.0.1:1111/directory/nop
+user-agent : Go-http-client/1.1
+Request error:200{
+Method : <GET>
+Path : </directory/nop/>
+Version : <HTTP/1.1>
+Headers{
+accept-encoding : gzip
+host : 127.0.0.1:1111
+user-agent : Go-http-client/1.1
+Request error:200{
+Method : <GET>
+Path : </directory/nop/other.pouic>
+Version : <HTTP/1.1>
+Headers{
+accept-encoding : gzip
+host : 127.0.0.1:1111
+user-agent : Go-http-client/1.1
+Request error:200{
+Method : <GET>
+Path : </directory/nop/other.pouac>
+Version : <HTTP/1.1>
+Headers{
+accept-encoding : gzip
+host : 127.0.0.1:1111
+user-agent : Go-http-client/1.1
+Request error:200{
+Method : <GET>
+Path : </directory/Yeah>
+Version : <HTTP/1.1>
+Headers{
+accept-encoding : gzip
+host : 127.0.0.1:1111
+user-agent : Go-http-client/1.1
+Request error:200{
+Method : <GET>
+Path : </directory/Yeah/>
+Version : <HTTP/1.1>
+Headers{
+accept-encoding : gzip
+host : 127.0.0.1:1111
+referer : http://127.0.0.1:1111/directory/Yeah
+user-agent : Go-http-client/1.1
+Request error:200{
+Method : <GET>
+Path : </directory/Yeah/not_happy.bad_extension>
+Version : <HTTP/1.1>
+Headers{
+accept-encoding : gzip
+host : 127.0.0.1:1111
+user-agent : Go-http-client/1.1
+100000000
+Request error:200{
+Method : <POST>
+Path : </directory/youpi.bla>
+Version : <HTTP/1.1>
+Headers{
+accept-encoding : gzip
+content-type : test/file
+host : 127.0.0.1:1111
+transfer-encoding : chunked
+user-agent : Go-http-client/1.1
+there is body to write cgi and write pipe is 11
+excute cgi! client fd is8 and write pipe is11 read pipe is 12
+there is no body to write cgi so write is end
+cause write pipe is closed, read is end
+process wait and making response event
+wait pid is 32664
+lets put response and register to write event
+size of excute info is 0
+size of pipe info is 0
+first member of pipe info is 0
+size of pid info is 0
