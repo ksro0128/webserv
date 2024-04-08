@@ -41,7 +41,8 @@ void RequestMaker::makeRequest(Document &doc, int fd)
         if (close(fd) < 0)
             throw std::runtime_error("in byte minus close error");
         std::cout << "read error from fd is " << fd << std::endl;
-        throw std::runtime_error("read error");
+        return;
+        // throw std::runtime_error("read error");
     }
     buf[bytes] = '\0';
     std::string buff(buf);
@@ -51,7 +52,7 @@ void RequestMaker::makeRequest(Document &doc, int fd)
     // if (doc.GetIncomplete(fd).IsComplete() || doc.GetIncomplete(fd).GetReqClose() == 1) // 헤더 파싱에러일 때, 왜 server not found 에러가 뜨는가????
     if (doc.GetIncomplete(fd).IsComplete())
     {
-        doc.GetIncomplete(fd).PrintRequest();
+        // doc.GetIncomplete(fd).PrintRequest();
         // return ;
         doc.PutComplete(doc.GetIncomplete(fd));
         doc.RemoveIncomplete(fd);

@@ -7,6 +7,8 @@ ExecInfo::ExecInfo()
 ExecInfo::ExecInfo(int socket, int readPipe, int writePipe, int pid,  Request& req)
     : m_socket(socket), m_readPipe(readPipe), m_writePipe(writePipe), m_pid(pid), m_req(req)
 {
+    m_start = 0;
+    m_bodyLen = req.GetBody().length();
 }
 
 ExecInfo::~ExecInfo()
@@ -61,4 +63,15 @@ int ExecInfo::GetPid()
 std::string& ExecInfo::GetBuffer()
 {
     return m_buffer;
+}
+
+
+int& ExecInfo::GetPointer()
+{
+    return m_start;
+}
+
+int& ExecInfo::GetBodyLen()
+{
+    return m_bodyLen;
 }

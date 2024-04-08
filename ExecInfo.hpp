@@ -12,6 +12,8 @@ private:
     int         m_pid;
     Request m_req;
     std::string m_buffer;
+    int         m_start;
+    int         m_bodyLen;
 public:
     ExecInfo();
     ExecInfo(int socket, int readPipe, int writePipe, int pid, Request& req);
@@ -24,6 +26,8 @@ public:
     int GetWritePipe();
     int GetPid();
     std::string& GetBuffer();
+    int& GetPointer();
+    int& GetBodyLen();
     Request& GetRequest();
 };
 

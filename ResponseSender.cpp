@@ -24,9 +24,29 @@ void ResponseSender::SendResponses(Document &document) // 다양한 에러처리
 		int clientSock = response.GetOriginFd();
 		std::string responseStr = response.GetResponse();
 		// std::cout << "-----------responseStr-----------\n";
-		// std::cout << std::endl << responseStr << std::endl;
+		int len;
+		int start = 0;
+		const char *buf = responseStr.c_str();
+		int rest = responseStr.length();
+		if (responseStr.length() > 10000)
+		{
+			while (rest > 0)
+			{
+				if (rest > 100000)
+					len = write(clientSock, &buf[start], 100000);
+				else
+					len = write(clientSock, &buf[start], rest);
+				if (len == -1)
+					continue;
+				start += len;
+				rest -= len;
+				// std::cout << "write " << len << " to client\n";
+				// std::cout << "rest is " << rest << "\n";
+			}
+		}
+		else
+			len = write(clientSock, responseStr.c_str(), responseStr.length());
 		// std::cout << "-------End responseStr-----------\n";
-		int len = write(clientSock, responseStr.c_str(), responseStr.length());
 		// if (len == -1 || static_cast<unsigned long>(len) != responseStr.length())
 		if (len == -1)
 		{

@@ -94,7 +94,7 @@ void WebServ::RunServer()
             {
                 //wait 해야함
                 // response 보내기
-                std::cout << "process wait and making response event" << std::endl;
+                // std::cout << "process wait and making response event" << std::endl;
                 m_cgiProcessor.Wait(m_document, ev_list[i].ident);
             }
         }
