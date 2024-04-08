@@ -6,21 +6,28 @@
 
 class ExecInfo{
 private:
-    int m_socket;
-    int m_readPipe;
-    int m_pid;
+    int         m_socket;
+    int         m_readPipe;
+    int         m_writePipe;
+    int         m_pid;
     Request m_req;
+    std::string m_buffer;
+    int         m_start;
+    int         m_bodyLen;
 public:
     ExecInfo();
-    ExecInfo(int socket, int readPipe, int pid, Request& req);
+    ExecInfo(int socket, int readPipe, int writePipe, int pid, Request& req);
     ~ExecInfo();
     ExecInfo(const ExecInfo& r);
     ExecInfo& operator=(const ExecInfo& r);
 
-
     int GetSocket();
     int GetReadPipe();
+    int GetWritePipe();
     int GetPid();
+    std::string& GetBuffer();
+    int& GetPointer();
+    int& GetBodyLen();
     Request& GetRequest();
 };
 

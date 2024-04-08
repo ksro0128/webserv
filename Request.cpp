@@ -10,7 +10,7 @@ Request::Request() : m_status(0)
     m_status = 200;
     m_reqClose = 0;
     m_eof = 0;
-    m_bodyLimit = 1000;
+    m_bodyLimit = 100000000;
     m_readBodyLen = 0;
     m_reqBodyLen = 0;
     m_stage = 0;
@@ -228,6 +228,7 @@ void Request::ParseRequest(int fd, std::string& buff)
                     }
                     m_body += tmp.substr(0, len - 2);
                     // std::cout << "m_body is " << m_body << std::endl;
+                    m_readBodyLen += len - 2;
                     m_chunkedFlag = 0;
                 }
                 start += tmp.length();

@@ -18,6 +18,7 @@ public:
     ~CgiProcessor();
     void ExcuteCgi(Document &doc);
     void Read(Document &doc, int fd);
+    void Write(Document &doc, int fd);
     void Wait(Document &doc, int pid);
 private:
     Config m_config;

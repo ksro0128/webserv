@@ -79,12 +79,19 @@ void CgiProcessor::ExcuteCgi(Document &doc)
         std::ifstream ifs(filename);
         if (ifs.is_open() == false)
         {
-        	Response response;
-        	setResponseError(request, response, server, 404);
-        	doc.PutResponse(response);
-			setWriteEvent(request.GetFd());
-        	std::cout << "file open error" << std::endl;
-        	continue ;
+			if (request.GetMethod() == "POST")
+			{
+				std::cout << "its post!\n";
+			}
+			else
+			{
+				Response response;
+				setResponseError(request, response, server, 404);
+				doc.PutResponse(response);
+				setWriteEvent(request.GetFd());
+				std::cout << "file open error" << std::endl;
+				continue ;
+			}
         }
         if (access(cgi[1].c_str(), F_OK) == -1 || access(cgi[1].c_str(), X_OK) == -1)
         {
@@ -120,86 +127,156 @@ void CgiProcessor::ExcuteCgi(Document &doc)
         {
 			close(p1[0]);
 			close(p2[1]);
-			std::string body = request.GetBody();
-			while (body.length() > 0)
-			{
-				int len = write(p1[1], body.c_str(), 40000);
-				body = body.substr(len);
-			}
-			// write(p1[1], request.GetBody().c_str(), request.GetBody().length());
-			close(p1[1]);
-        	ExecInfo info(request.GetFd(), p2[0], pid, request);
+        	ExecInfo *p = new ExecInfo(request.GetFd(), p2[0], p1[1], pid, request);
+			std::hash<ExecInfo*> hash;
+			size_t key = hash(p);
 			setReadEvent(p2[0]);
+			fcntl(p2[0], F_SETFL, O_NONBLOCK);
+			fcntl(p1[1], F_SETFL, O_NONBLOCK);
+			if (request.GetBody().length() > 0)
+			{
+				// std::cout << "there is body to write cgi and write pipe is " << p1[1] << std::endl;
+				setWriteEvent(p1[1]);
+				doc.PutPipeInfo(p1[1], key);
+			}
+			else
+				close(p1[1]);
 			setPidEvent(pid);
-			doc.PutPidInfo(pid, info);
-			doc.PutExcute(p2[0]);
-			// std::cout << "excute cgi! client fd is" << request.GetFd() << " and pipe fd is" << p[0] << std::endl;
+			doc.PutExcuteInfo(key, p);
+			doc.PutPipeInfo(p2[0], key);
+			doc.PutPidInfo2(pid, key);
+			// std::cout << "excute cgi! client fd is" << request.GetFd() << " and write pipe is" << p1[1] << " read pipe is " << p2[0] << std::endl;
         }
     }
     doc.ClearDynamic();
 }
 
-void CgiProcessor::Read(Document &doc, int fd)
+void CgiProcessor::Write(Document &doc, int fd)
 {
-	char buf[10001];
-	int len;
-	len = read(fd, buf, 10000);
-	buf[len] = '\0';
-	std::cout << buf << std::endl;
-	// std::cout << "fd is " << fd << " and read len is " << len << std::endl;
-	if (len == -1)
+	size_t hash = doc.GetHashByPipe(fd);
+	ExecInfo* info = doc.GetExcuteInfoByHash(hash);
+	Request& request = info->GetRequest();
+	// std::string& body = request.GetBody();
+	// std::cout << "lets write cgi body length is " << body.length() << std::endl;
+	int& start = info->GetPointer();
+	int& len = info->GetBodyLen();
+	const char* body = request.GetBody().c_str();
+	if (len != 0)
 	{
-		close(fd);
-		doc.RemoveExcute(fd);
-		throw std::runtime_error("read error");
+		int writeLen;
+		if (len > 65536)
+			writeLen = write(fd, &body[start], 65536);
+		else
+			writeLen = write(fd, &body[start], len);
+		if (writeLen == 0)
+		{
+			// std::cout << "cause read pipe is closed, write is end\n";
+			close(fd);
+			doc.RemovePipeInfo(fd);
+			return;
+		}
+		else if (writeLen == -1)
+			return ;
+		else
+		{
+			// std::cout << "success write " << writeLen << " byte\n";
+			start += writeLen;
+			len -= writeLen;
+		}
 	}
 	else
-		doc.GetBuffer(fd) += buf;
+	{
+		// std::cout << "there is no body to write cgi so write is end\n";
+		close(fd);
+		doc.RemovePipeInfo(fd);
+	}
+}
+
+void CgiProcessor::Read(Document &doc, int fd)
+{
+	// static int flag = 0;
+	char buf[65537];
+	int len;
+	len = read(fd, buf, 65536);
+	if (len == -1)
+	{
+		// std::cout << "read error pipe is " << fd << std::endl;
+		close(fd);
+		doc.RemovePipeInfo(fd);
+		return;
+	}
+	else if (len == 0)
+	{
+		// std::cout << "cause write pipe is closed, read is end\n";
+		close(fd);
+		doc.RemovePipeInfo(fd);
+		return;
+	}
+	buf[len] = '\0';
+	// std::cout << buf[0];
+	size_t hash = doc.GetHashByPipe(fd);
+	// std::cout << "read len is " << len << std::endl;
+	// std::cout << "in cgi read, fd is " << fd << " and read len is " << len << " and hash is " << hash << std::endl;
+	doc.GetExcuteInfoByHash(hash)->GetBuffer() += buf;
+	// if (flag == 0 && doc.GetExcuteInfoByHash(hash)->GetBuffer().length() > 100000)
+	// {
+	// 	std::string& body = doc.GetExcuteInfoByHash(hash)->GetBuffer();
+	// 	body = body.substr(0, 58);
+	// 	std::cout << "\n\n\n\n\ncut!!!\n\n\n\n\n";
+	// 	std::cout << "cutted body is " << doc.GetExcuteInfoByHash(hash)->GetBuffer() << std::endl;
+	// 	close(fd);
+	// 	doc.RemovePipeInfo(fd);
+	// 	flag = 1;
+	// }
 }
 
 void CgiProcessor::Wait(Document &doc, int pid)
 {
 	int status;
 	waitpid(pid, &status, 0);
+	// std::cout << "wait pid is " << pid << std::endl;
+	size_t hash = doc.GetHashByPid(pid);
+	ExecInfo* info = doc.GetExcuteInfoByHash(hash);
+	Request& request = info->GetRequest();
+	Server& server = m_config.GetServer(request.GetPort(), request.GetHost());
+	Response response;
+	int pipefd = info->GetReadPipe();
+	sockaddr_in addr;
+	socklen_t len = sizeof(addr);
+	// std::cout << "buffer length is " << info->GetBuffer().length() << std::endl;	
 	if (WIFEXITED(status))
 	{
-		ExecInfo& info = doc.GetPidInfo(pid);
-		int pipefd = info.GetReadPipe();
-		Request& request = info.GetRequest();
-		Server server = m_config.GetServer(request.GetPort(), request.GetHost());
-		Response response;
 		response.SetVersion("HTTP/1.1");
 		response.SetStatusCode(200);
 		response.SetStatusMessage("OK");
 		response.SetOriginFd(request.GetFd());
 		response.SetHeader("Content-Type", "text/html");
-		response.SetBody(doc.GetBuffer(pipefd));
+		// if (info->GetBuffer().length() < 10000)
+			response.SetBody(info->GetBuffer());
+		// else
+		// 	response.SetBody(info->GetBuffer().substr(58));
 		if (request.GetMethod() == "HEAD")
 			response.RemoveBody();
-		doc.PutResponse(response);
-		setWriteEvent(request.GetFd());
-		if (close(pipefd) < 0)
-		{
-			std::cout << "close error" << std::endl;
-		}
-		// else
-			// std::cout << "close pipe " << pipefd << std::endl;
-		doc.RemoveExcute(pipefd);
-		doc.RemovePidInfo(pid);
 	}
 	else
-	{
-		ExecInfo& info = doc.GetPidInfo(pid);
-		Request& request = info.GetRequest();
-		Server &server = m_config.GetServer(request.GetPort(), request.GetHost());
-		Response response;
 		setResponseError(request, response, server, 500);
+	close(pipefd);
+	if (getsockname(request.GetFd(), (struct sockaddr*)&addr, &len) == 0)
+	{
+		// std::cout << "lets put response and register to write event\n";
 		doc.PutResponse(response);
 		setWriteEvent(request.GetFd());
-		close(info.GetReadPipe());
-		doc.RemoveExcute(pid);
-		doc.RemovePidInfo(pid);
 	}
+	else
+		std::cout << "client socket is closed\n";
+	doc.RemoveExcuteInfo(hash);
+	doc.RemovePipeInfo(pipefd);
+	doc.RemovePidInfo2(pid);
+	// std::cout << "size of excute info is " << doc.GetExcuteCount() << std::endl;
+	// std::cout << "size of pipe info is " << doc.GetPipeInfo().size() << std::endl;
+	// std::cout << "first member of pipe info is " << doc.GetPipeInfo().begin()->first << std::endl;
+	// std::cout << "size of pid info is " << doc.GetPidInfo2().size() << std::endl;
+	// std::cout << "end wait\n";
 }
 
 std::vector<std::string> CgiProcessor::getCgiInfo(Request &request, Server &server)
@@ -274,16 +351,19 @@ void CgiProcessor::inChild(Request &request, Server &server, std::vector<std::st
 	std::string method = request.GetMethod();
 
 	addCgiEnv("REQUEST_METHOD", method);
+	std::string script_name;
+
 	// addCgiEnv("SCRIPT_NAME", path);
-	// addCgiEnv("CONTENT_TYPE", request.GetHeader("content-type"));
+	addCgiEnv("CONTENT_TYPE", request.GetHeader("content-type"));
 	// addCgiEnv("CONTENT_LENGTH", inttoString(body.length()));
 	// addCgiEnv("GATEWAY_INTERFACE", "CGI/1.1");
 	// addCgiEnv("HTTP_ACCEPT", request.GetHeader("accept"));
 	// addCgiEnv("HTTP_ACCEPT_CHARSET", request.GetHeader("accept-charset"));
 	// addCgiEnv("HTTP_HOST", request.GetHeader("host"));
 	// addCgiEnv("HTTP_USER_AGENT", request.GetHeader("user-agent"));
-	addCgiEnv("PATH_INFO", "./http/directory/");
+	addCgiEnv("PATH_INFO", path);
 	// addCgiEnv("PATH_TRANSLATED", path);
+	// std::cout << "path is " << path << std::endl;
 	// addCgiEnv("QUERY_STRING", query);
 	// addCgiEnv("SERVER_NAME", server.GetServerName()[0]);
 	// addCgiEnv("SERVER_PORT", inttoString(server.GetPort()[0]));

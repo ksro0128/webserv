@@ -65,7 +65,7 @@ void WebServ::RunServer()
                 }
                 else
                 {
-                    if (m_document.GetExcute().find(ev_list[i].ident) != m_document.GetExcute().end()) // cgi 소켓 - 응답 처리
+                    if (m_document.GetHashByPipe(ev_list[i].ident) != 0) // cgi 소켓 - 응답 처리
                     {
                         // std::cout << "read event for cgi fd is " << ev_list[i].ident << std::endl;
                         m_cgiProcessor.Read(m_document, ev_list[i].ident);
@@ -81,20 +81,27 @@ void WebServ::RunServer()
             {
                 // response 보내기
                 // std::cout << "write event" << std::endl;
-                m_responseSender.SendResponses(m_document);
+                if (m_document.GetHashByPipe(ev_list[i].ident) != 0)
+                {
+                    m_cgiProcessor.Write(m_document, ev_list[i].ident);
+                }
+                else
+                {
+                    m_responseSender.SendResponses(m_document);
+                }
             }
             else // process 이벤트
             {
                 //wait 해야함
                 // response 보내기
-                std::cout << "process wait and making response event" << std::endl;
+                // std::cout << "process wait and making response event" << std::endl;
                 m_cgiProcessor.Wait(m_document, ev_list[i].ident);
             }
         }
         m_classifier.Classify(m_document);
         m_staticProcessor.Process(m_document);
         m_cgiProcessor.ExcuteCgi(m_document);
-        m_fileUploaders.ProcessUpload(m_document);
+        // m_fileUploaders.ProcessUpload(m_document);
         // m_document.ClearDynamic();
         // m_document.ClearStatic();
     }

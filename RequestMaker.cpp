@@ -40,8 +40,9 @@ void RequestMaker::makeRequest(Document &doc, int fd)
         doc.RemoveIncomplete(fd);
         if (close(fd) < 0)
             throw std::runtime_error("in byte minus close error");
-        std::cout << "read error" << std::endl;
-        throw std::runtime_error("read error");
+        std::cout << "read error from fd is " << fd << std::endl;
+        return;
+        // throw std::runtime_error("read error");
     }
     buf[bytes] = '\0';
     std::string buff(buf);
