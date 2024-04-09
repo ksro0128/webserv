@@ -24,6 +24,7 @@ private:
     Config m_config;
     int m_kq;
     std::map<int, std::string> m_statusMessageSet;
+    std::set<std::string> m_validHeader;
 	std::vector<std::string> m_envp;
     std::vector<std::string> getCgiInfo(Request &request, Server &server);
     void setResponseError(Request &request, Response &response, Server &server, int status);
@@ -33,6 +34,7 @@ private:
     void inChild(Request &request, Server &server, std::vector<std::string> &cgi, std::string& filename, int p1[2], int p2[2]);
 	bool isAllowedMethod(Request& request, Location& location);
 	void addCgiEnv(std::string key, std::string value);
+    void parseCgiBody(Response& response, std::string& body);
 	std::string inttoString(int num);
 };
 

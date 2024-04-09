@@ -3,7 +3,6 @@
 #include "main.hpp"
 #include "Document.hpp"
 #include "RequestMaker.hpp"
-#include "RequestProcessor.hpp"
 #include "StaticProcessor.hpp"
 #include "ResponseSender.hpp"
 #include "CgiProcessor.hpp"
@@ -22,7 +21,6 @@ class WebServ
 		WebServ& operator=(const WebServ&);
 		Document m_document;
 		RequestMaker m_requestMaker;
-		RequestProcessor m_requestProcessor;
 		ResponseSender m_responseSender;
 		CgiProcessor m_cgiProcessor;
 		Classifier m_classifier;

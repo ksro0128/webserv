@@ -5,7 +5,6 @@ WebServ::WebServ(std::string configPath, std::vector<std::string> envp)
     m_config.ParseConfig(configPath);
 
     m_kq = kqueue();
-    m_requestProcessor.Set(m_config, m_kq);
     m_responseSender.Set(m_config, m_kq);
     m_cgiProcessor.Set(m_config, m_kq, envp);
     m_classifier.Set(m_config);
@@ -34,14 +33,19 @@ WebServ::~WebServ()
 void WebServ::RunServer()
 {
     struct kevent ev_set;
-    struct kevent ev_list[500];
+    struct kevent ev_list[50];
     while (1)
     {
         // std::cout << "wait for event" << std::endl;
         // std::cout << "now connected client is " << m_document.GetFdEvent().size() << std::endl;
-        int nev = kevent(m_kq, NULL, 0, ev_list, 500, NULL);
+        int nev = kevent(m_kq, NULL, 0, ev_list, 50, NULL);
         for (int i = 0; i < nev; i++)
         {
+            if (ev_list[i].flags & EV_ERROR)
+            {
+                std::cout << "error event" << std::endl;
+                continue;
+            }
             if (ev_list[i].filter == EVFILT_READ) // read 이벤트
             {
                 if (m_document.GetFdEvent().find(ev_list[i].ident) != m_document.GetFdEvent().end() && m_document.GetFdEvent().find(ev_list[i].ident)->second == "server")
@@ -67,12 +71,12 @@ void WebServ::RunServer()
                 {
                     if (m_document.GetHashByPipe(ev_list[i].ident) != 0) // cgi 소켓 - 응답 처리
                     {
-                        // std::cout << "read event for cgi fd is " << ev_list[i].ident << std::endl;
+                        // std::cout << "read event for cgi " << ev_list[i].ident << std::endl;
                         m_cgiProcessor.Read(m_document, ev_list[i].ident);
                     }
                     else // 클라이언트 소켓 - 요청 처리
 					{
-                        // std::cout << "read event for client" << std::endl;
+                        // std::cout << "read event for client " << ev_list[i].ident << std::endl;
                         m_requestMaker.makeRequest(m_document, ev_list[i].ident);
 					}
                 }
@@ -83,11 +87,13 @@ void WebServ::RunServer()
                 // std::cout << "write event" << std::endl;
                 if (m_document.GetHashByPipe(ev_list[i].ident) != 0)
                 {
+                    // std::cout << "write event to cgi pipe fd : " << ev_list[i].ident  << "\n";
                     m_cgiProcessor.Write(m_document, ev_list[i].ident);
                 }
                 else
                 {
-                    m_responseSender.SendResponses(m_document);
+                    // std::cout << "write event to client " << ev_list[i].ident << "\n";
+                    m_responseSender.SendResponses(m_document, ev_list[i].ident);
                 }
             }
             else // process 이벤트
@@ -134,7 +140,7 @@ int WebServ::openPort(int port)
     {
         throw std::runtime_error("bind() error");
     }
-    if (listen(servSock, 500) == -1)
+    if (listen(servSock, 100) == -1)
     {
         throw std::runtime_error("listen() error");
     }

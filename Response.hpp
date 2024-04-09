@@ -25,14 +25,16 @@ class Response
 		std::multimap<std::string, std::string> GetHeaders();
 		std::string GetHeader(const std::string& key); // get specific header value
 		std::string GetBody();
-		std::string GetResponse();	
+		std::string& GetResponse();
 		int GetOriginFd();
 
 	private:
 		std::string m_version;
 		int m_origin_fd;
 		int m_statusCode;
+		int	m_flag;
 
+		std::string m_responsemessage;
 		std::string m_statusMessage;
 		std::multimap<std::string, std::string> m_headers;
 		std::string m_body;

@@ -47,11 +47,27 @@ void StaticProcessor::processStatic(Request& request, Document& document)
 		document.PutResponse(response);
 		return ;
 	}
-	if (isAllowedMethod(request, location) == false || (request.GetMethod() != "GET" && request.GetMethod() != "HEAD"))
+	if (isAllowedMethod(request, location) == false)
 	{
 		setResponse(request, response, 405);
 		putBody(request, response, server.GetErrorPage(405));
 		putAllowedMethod(response, location); 
+		setEventWriteable(request.GetFd());
+		document.PutResponse(response);
+		return ;
+	}
+	if (location.GetLimitBodySize() != 0 && request.GetBody().length() > location.GetLimitBodySize())
+	{
+		setResponse(request, response, 413);
+		putBody(request, response, server.GetErrorPage(413));
+		setEventWriteable(request.GetFd());
+		document.PutResponse(response);
+		return ;
+	}
+	if (request.GetMethod() == "POST")
+	{
+		setResponse(request, response, 204);
+		// putBody(request, response, server.GetErrorPage(204));
 		setEventWriteable(request.GetFd());
 		document.PutResponse(response);
 		return ;

@@ -8,7 +8,6 @@
 #include "Request.hpp"
 #include "Document.hpp"
 #include "RequestMaker.hpp"
-#include "RequestProcessor.hpp"
 #include "Response.hpp"
 #include "ResponseSender.hpp"
 #include "CgiProcessor.hpp"

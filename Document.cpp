@@ -93,18 +93,27 @@ ExecInfo& Document::GetPidInfo(int pid)
 
 void Document::PutResponse(Response& res)
 {
-    m_response.push_back(res);
+    ResponseInfo *info = new ResponseInfo;
+    info->response = res;
+    info->start = 0;
+    info->rest = res.GetResponse().length();
+    m_response.insert(std::pair<int, ResponseInfo*>(res.GetOriginFd(), info));
 }
 
-std::vector<Response>& Document::GetResponse()
+ResponseInfo* Document::GetResponse(int fd)
 {
-    return m_response;
+    return m_response[fd];
 }
 
-int Document::GetExcuteCount()
+void Document::RemoveResponse(int fd)
 {
-    return m_excuteCount;
+    if (m_response.find(fd) != m_response.end())
+    {
+        delete m_response[fd];
+        m_response.erase(fd);
+    }
 }
+
 
 void Document::PutStatic(Request& req)
 {
@@ -134,16 +143,6 @@ std::vector<Request>& Document::GetDynamic()
 void Document::ClearDynamic()
 {
 	m_dynamic.clear();
-}
-
-void Document::AddExcuteCount()
-{
-    m_excuteCount++;
-}
-
-void Document::SubExcuteCount()
-{
-    m_excuteCount--;
 }
 
 
