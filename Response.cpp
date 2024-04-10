@@ -6,6 +6,7 @@ Response::Response()
 	m_statusCode = 200;
 	m_statusMessage = "OK";
 	m_body = "";
+	m_flag = 0;
 }
 
 Response::~Response()
@@ -20,6 +21,8 @@ Response::Response(const Response& rhs)
 	m_headers = rhs.m_headers;
 	m_body = rhs.m_body;
 	m_origin_fd = rhs.m_origin_fd;
+	m_flag = rhs.m_flag;
+	m_responsemessage = rhs.m_responsemessage;
 }
 
 Response& Response::operator=(const Response& rhs)
@@ -32,6 +35,8 @@ Response& Response::operator=(const Response& rhs)
 	m_headers = rhs.m_headers;
 	m_body = rhs.m_body;
 	m_origin_fd = rhs.m_origin_fd;
+	m_flag = rhs.m_flag;
+	m_responsemessage = rhs.m_responsemessage;
 	return *this;
 }
 
@@ -98,20 +103,29 @@ std::string Response::GetBody()
 	return m_body;
 }
 
-std::string Response::GetResponse()
+std::string& Response::GetResponse()
 {
-	std::string response = m_version + " " + intToString(m_statusCode) + " " + m_statusMessage + "\r\n";
-	std::string date = makeDate();
-	m_headers.insert(std::pair<std::string, std::string>("Date", date));
-	m_headers.insert(std::pair<std::string, std::string>("Server", "Webserv"));
-
-	for (std::multimap<std::string, std::string>::iterator it = m_headers.begin(); it != m_headers.end(); it++)
+	if (m_flag == 0)
 	{
-		response += it->first + ": " + it->second + "\r\n";
+		std::string response = m_version + " " + intToString(m_statusCode) + " " + m_statusMessage + "\r\n";
+		std::string date = makeDate();
+		m_headers.insert(std::pair<std::string, std::string>("Date", date));
+		m_headers.insert(std::pair<std::string, std::string>("Server", "Webserv"));
+
+		for (std::multimap<std::string, std::string>::iterator it = m_headers.begin(); it != m_headers.end(); it++)
+		{
+			response += it->first + ": " + it->second + "\r\n";
+		}
+		response += "\r\n";
+		response += m_body;
+		// std::cout << "response is " << response << std::endl;
+		m_responsemessage = response;
+		// std::cout << "after set m_responsemessage\n";
+		m_flag = 1;
+		return m_responsemessage;
 	}
-	response += "\r\n";
-	response += m_body;
-	return response;
+	else
+		return m_responsemessage;
 }
 
 std::string Response::makeDate()

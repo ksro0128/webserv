@@ -43,7 +43,6 @@ SRCS = main.cpp \
 	   RequestMaker.cpp \
 	   Document.cpp \
 	   Response.cpp \
-	   RequestProcessor.cpp \
 	   ResponseSender.cpp \
 	   ExecInfo.cpp \
 	   CgiProcessor.cpp \

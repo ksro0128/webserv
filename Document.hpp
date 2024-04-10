@@ -15,6 +15,12 @@ typedef struct s_UploadInfo{
     int                     uploaded;
 }UploadInfo;
 
+typedef struct s_ResponseInfo{
+    Response response;
+    int start;
+    int rest;
+}ResponseInfo;
+
 class Document{
 public:
     Document();
@@ -39,15 +45,11 @@ public:
     void PutPidInfo(int pipefd, ExecInfo& info);
     void RemovePidInfo(int pipefd);
     ExecInfo& GetPidInfo(int pid);
-
-    int GetExcuteCount();
-    void AddExcuteCount();
-    void SubExcuteCount();
 	
-    
 
     void PutResponse(Response& res);
-    std::vector<Response>& GetResponse();
+    ResponseInfo* GetResponse(int fd);
+    void RemoveResponse(int fd);
 
 	void PutStatic(Request& req);
 	std::vector<Request>& GetStatic();
@@ -89,7 +91,8 @@ private:
     std::map<int, size_t> m_pipeInfo;
     std::map<int, size_t> m_pidInfo2;
 
-    std::vector<Response> m_response;
+    // std::vector<Response> m_response;
+    std::map<int, ResponseInfo*> m_response;
     std::map<int, UploadInfo> m_uploadFiles;
 	std::vector<Request> m_static;
 	std::vector<Request> m_dynamic;

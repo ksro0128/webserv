@@ -19,6 +19,7 @@ class Location
 		bool& GetAutoIndex();
 		int& GetRedirectionCode();
 		std::string& GetRedirectionUri();
+		size_t GetLimitBodySize();
 		
 		bool& GetRedicetionFlag();
 		
@@ -30,17 +31,20 @@ class Location
 		bool m_autoIndex;
 		int m_redirectionCode;
 		std::string m_redirectionUri;
+		int m_limitbodysize;
 
 		bool m_rootFlag;
 		bool m_indexFlag;
 		bool m_methodFlag;
 		bool m_autoIndexFlag;
 		bool m_redirectionFlag;
+		bool m_limitbodysizeFlag;
 
 		void parseRoot(std::istringstream& issLine);
 		void parseIndex(std::istringstream& issLine);
 		void parseMethod(std::istringstream& issLine);
 		void parseAutoIndex(std::istringstream& issLine);
 		void parseRedirection(std::istringstream& issLine);
+		void parseLimitBodySize(std::istringstream& issLine);
 
 };

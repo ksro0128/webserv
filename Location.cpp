@@ -14,6 +14,7 @@ Location::Location()
 	m_methodFlag = false;
 	m_autoIndexFlag = false;
 	m_redirectionFlag = false;
+	m_limitbodysizeFlag = false;
 }
 
 Location::Location(const Location& rhs)
@@ -32,11 +33,13 @@ Location& Location::operator=(const Location& rhs)
 	m_autoIndex = rhs.m_autoIndex;
 	m_redirectionCode = rhs.m_redirectionCode;
 	m_redirectionUri = rhs.m_redirectionUri;
+	m_limitbodysize = rhs.m_limitbodysize;
 	m_rootFlag = rhs.m_rootFlag;
 	m_indexFlag = rhs.m_indexFlag;
 	m_methodFlag = rhs.m_methodFlag;
 	m_autoIndexFlag = rhs.m_autoIndexFlag;
 	m_redirectionFlag = rhs.m_redirectionFlag;
+	m_limitbodysizeFlag = rhs.m_limitbodysizeFlag;
 
 	return *this;
 }
@@ -127,6 +130,17 @@ void Location::ParseLocation(std::string block, std::string path)
 				parseAutoIndex(issLine);
 			}
 			catch (std::exception& e)
+			{
+				throw std::runtime_error("Error: config file is invalid\n>>>" + line + "<<<");
+			}
+		}
+		else if (token == "limit_body_size")
+		{
+			try
+			{
+				parseLimitBodySize(issLine);
+			}
+			catch(const std::exception& e)
 			{
 				throw std::runtime_error("Error: config file is invalid\n>>>" + line + "<<<");
 			}
@@ -312,4 +326,26 @@ std::string& Location::GetRedirectionUri()
 bool& Location::GetRedicetionFlag()
 {
 	return m_redirectionFlag;
+}
+
+void Location::parseLimitBodySize(std::istringstream& issLine)
+{
+	if (m_limitbodysizeFlag)
+		throw std::runtime_error("limit_body_size is already defined");
+	m_limitbodysizeFlag = true;
+	std::string token;
+	if (!(issLine >> token))
+		throw std::runtime_error("limit_body_size is not defined");
+	m_limitbodysize = strtol(token.c_str(), NULL, 10);
+	if (!(issLine >> token))
+		throw std::runtime_error("limit_body_size is invalid");
+	if (token != ";")
+		throw std::runtime_error("limit_body_size is invalid");
+	if (issLine >> token)
+		throw std::runtime_error("limit_body_size is invalid");
+}
+
+size_t Location::GetLimitBodySize()
+{
+	return m_limitbodysize;
 }

@@ -47,11 +47,27 @@ void StaticProcessor::processStatic(Request& request, Document& document)
 		document.PutResponse(response);
 		return ;
 	}
-	if (isAllowedMethod(request, location) == false || (request.GetMethod() != "GET" && request.GetMethod() != "HEAD"))
+	if (isAllowedMethod(request, location) == false)
 	{
 		setResponse(request, response, 405);
 		putBody(request, response, server.GetErrorPage(405));
 		putAllowedMethod(response, location); 
+		setEventWriteable(request.GetFd());
+		document.PutResponse(response);
+		return ;
+	}
+	if (location.GetLimitBodySize() != 0 && request.GetBody().length() > location.GetLimitBodySize())
+	{
+		setResponse(request, response, 413);
+		putBody(request, response, server.GetErrorPage(413));
+		setEventWriteable(request.GetFd());
+		document.PutResponse(response);
+		return ;
+	}
+	if (request.GetMethod() == "POST")
+	{
+		setResponse(request, response, 204);
+		// putBody(request, response, server.GetErrorPage(204));
 		setEventWriteable(request.GetFd());
 		document.PutResponse(response);
 		return ;
@@ -148,6 +164,7 @@ void StaticProcessor::setEventWriteable(int fd)
 std::string StaticProcessor::getFilePath(Document& document, Request &request, Response &response, Server& server, Location& location)
 {
 	std::string filePath = location.GetRoot() + request.GetPath();
+	std::cout << "filePath : " << filePath << std::endl;
 	struct stat buf;
 	if (stat(filePath.c_str(), &buf) == -1)
 	{
@@ -206,7 +223,7 @@ std::string StaticProcessor::getFilePath(Document& document, Request &request, R
 		for (std::vector<std::string>::iterator it = index.begin(); it != index.end(); it++)
 		{
 			std::string indexPath = filePath + *it;
-			// std::cout << "indexPath : " << indexPath << std::endl;
+			std::cout << "indexPath : " << indexPath << std::endl;
 			std::fstream file(indexPath.c_str());
 			if (file.is_open())
 			{
@@ -214,7 +231,7 @@ std::string StaticProcessor::getFilePath(Document& document, Request &request, R
 				if (isCgi(indexPath, server) == true)
 				{
 					std::string tmp = request.GetPath() + "/" + *it;
-					// std::cout << tmp << std::endl;
+					std::cout << tmp << std::endl;
 					request.SetPath(tmp);
 					document.PutDynamic(request);
 					return "";

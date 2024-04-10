@@ -250,7 +250,7 @@ void Request::ParseRequest(int fd, std::string& buff)
             m_readBodyLen += total_len - start;
             m_reqBodyLen -= total_len - start;
         }
-		std::cout << m_readBodyLen << std::endl;
+		// std::cout << m_readBodyLen << std::endl;
         if (m_readBodyLen > m_bodyLimit && m_status == 200)
         {
             m_status = 413;
@@ -397,6 +397,7 @@ void Request::checkEssential()
     if (m_path.length() > 1024 && m_status == 200)
     {
         m_status = 414;
+        std::cout << "URI is too long\n";
         m_reqClose = 1;
     }
     unsigned long pos;

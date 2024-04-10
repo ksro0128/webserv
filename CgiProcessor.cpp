@@ -135,7 +135,7 @@ void CgiProcessor::ExcuteCgi(Document &doc)
 			fcntl(p1[1], F_SETFL, O_NONBLOCK);
 			if (request.GetBody().length() > 0)
 			{
-				// std::cout << "there is body to write cgi and write pipe is " << p1[1] << std::endl;
+				std::cout << "there is body to write cgi and write pipe is " << p1[1] << std::endl;
 				setWriteEvent(p1[1]);
 				doc.PutPipeInfo(p1[1], key);
 			}
@@ -251,15 +251,15 @@ void CgiProcessor::Wait(Document &doc, int pid)
 		response.SetStatusMessage("OK");
 		response.SetOriginFd(request.GetFd());
 		response.SetHeader("Content-Type", "text/html");
-		// if (info->GetBuffer().length() < 10000)
-			response.SetBody(info->GetBuffer());
-		// else
-		// 	response.SetBody(info->GetBuffer().substr(58));
+		parseCgiBody(response, info->GetBuffer());
+		response.SetBody(info->GetBuffer());
 		if (request.GetMethod() == "HEAD")
 			response.RemoveBody();
 	}
 	else
+	{
 		setResponseError(request, response, server, 500);
+	}
 	close(pipefd);
 	if (getsockname(request.GetFd(), (struct sockaddr*)&addr, &len) == 0)
 	{
@@ -350,23 +350,28 @@ void CgiProcessor::inChild(Request &request, Server &server, std::vector<std::st
 	std::string body = request.GetBody();
 	std::string method = request.GetMethod();
 
+	std::multimap<std::string, std::string> &header = request.GetHeaders();
+	std::multimap<std::string, std::string>::iterator it = header.lower_bound("x");
+	for (; it != header.end(); it++)
+	{
+		std::string key = it->first;
+		std::string value = it->second;
+		for (size_t i = 0; i < key.length(); i++)
+			key[i] = std::toupper(key[i]);
+		std::cout << "extension header key is " << key << " and value is " << value << std::endl;
+		addCgiEnv("HTTP_" + key, value);
+	}
 	addCgiEnv("REQUEST_METHOD", method);
-	std::string script_name;
-
-	// addCgiEnv("SCRIPT_NAME", path);
+	addCgiEnv("SCRIPT_NAME", path);
 	addCgiEnv("CONTENT_TYPE", request.GetHeader("content-type"));
-	// addCgiEnv("CONTENT_LENGTH", inttoString(body.length()));
-	// addCgiEnv("GATEWAY_INTERFACE", "CGI/1.1");
-	// addCgiEnv("HTTP_ACCEPT", request.GetHeader("accept"));
-	// addCgiEnv("HTTP_ACCEPT_CHARSET", request.GetHeader("accept-charset"));
-	// addCgiEnv("HTTP_HOST", request.GetHeader("host"));
-	// addCgiEnv("HTTP_USER_AGENT", request.GetHeader("user-agent"));
+	addCgiEnv("CONTENT_LENGTH", inttoString(body.length()));
+	addCgiEnv("GATEWAY_INTERFACE", "CGI/1.1");
 	addCgiEnv("PATH_INFO", path);
-	// addCgiEnv("PATH_TRANSLATED", path);
+	addCgiEnv("PATH_TRANSLATED", path);
 	// std::cout << "path is " << path << std::endl;
-	// addCgiEnv("QUERY_STRING", query);
-	// addCgiEnv("SERVER_NAME", server.GetServerName()[0]);
-	// addCgiEnv("SERVER_PORT", inttoString(server.GetPort()[0]));
+	addCgiEnv("QUERY_STRING", query);
+	addCgiEnv("SERVER_NAME", server.GetServerName()[0]);
+	addCgiEnv("SERVER_PORT", inttoString(server.GetPort()[0]));
 	addCgiEnv("SERVER_PROTOCOL", request.GetVersion());
 	// addCgiEnv("SERVER_SOFTWARE", "webserv");
 
@@ -465,4 +470,51 @@ std::string CgiProcessor::inttoString(int num)
 	ss << num;
 	ss >> str;
 	return str;
+}
+
+void CgiProcessor::parseCgiBody(Response& response, std::string& body)
+{
+	size_t start = 0;
+	size_t pos;
+	std::multimap<std::string, std::string> headers = response.GetHeaders();
+	while ((pos = body.find("\r\n", start)) != std::string::npos)
+	{
+		std::string temp = body.substr(start, pos - start + 2);
+		// std::cout << "temp is " << temp << std::endl;
+		// for (size_t i = 0; i < temp.length(); i++)
+		// {
+		// 	printf("%d ", temp[i]);
+		// }
+		if (temp == "\r\n")
+		{
+			start = pos + 2;
+			break ;
+		}
+		size_t subpos = temp.find(":");
+		if (subpos == std::string::npos)
+			break; 
+		// \r\n파싱했는데 헤더가 아닐경우 바디 일부이므로 그냥 탈출
+		std::string key = temp.substr(0, subpos);
+		std::string value = temp.substr(subpos + 2, temp.length() - subpos - 4);
+		std::cout << "key is " << key << " and value is " << value << std::endl;
+		for (size_t i = 0; i < key.length(); i++)
+			key[i] = std::tolower(key[i]);
+		if (key == "status")
+		{
+			int status = std::stoi(value);
+			response.SetStatusCode(status);
+			response.SetStatusMessage(value);
+		}
+		else
+			response.SetHeader(key, value);
+		// std::cout << temp << std::endl;
+		start = pos + 2;
+	}
+	if (start != 0)
+	{
+		if (start >= body.length())
+			start--;
+		body = body.substr(start);
+		// std::cout << "parsed body is " << body << std::endl;
+	}
 }

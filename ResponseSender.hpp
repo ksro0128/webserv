@@ -12,7 +12,7 @@ class ResponseSender
 		ResponseSender();
 		~ResponseSender();
 		void Set(Config &config, int kq);
-		void SendResponses(Document &document);
+		void SendResponses(Document &document, int fd);
 	private:
 		ResponseSender(const ResponseSender &rhs);
 		ResponseSender &operator=(const ResponseSender &rhs);
