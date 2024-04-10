@@ -164,6 +164,7 @@ void StaticProcessor::setEventWriteable(int fd)
 std::string StaticProcessor::getFilePath(Document& document, Request &request, Response &response, Server& server, Location& location)
 {
 	std::string filePath = location.GetRoot() + request.GetPath();
+	std::cout << "filePath : " << filePath << std::endl;
 	struct stat buf;
 	if (stat(filePath.c_str(), &buf) == -1)
 	{
@@ -222,7 +223,7 @@ std::string StaticProcessor::getFilePath(Document& document, Request &request, R
 		for (std::vector<std::string>::iterator it = index.begin(); it != index.end(); it++)
 		{
 			std::string indexPath = filePath + *it;
-			// std::cout << "indexPath : " << indexPath << std::endl;
+			std::cout << "indexPath : " << indexPath << std::endl;
 			std::fstream file(indexPath.c_str());
 			if (file.is_open())
 			{
@@ -230,7 +231,7 @@ std::string StaticProcessor::getFilePath(Document& document, Request &request, R
 				if (isCgi(indexPath, server) == true)
 				{
 					std::string tmp = request.GetPath() + "/" + *it;
-					// std::cout << tmp << std::endl;
+					std::cout << tmp << std::endl;
 					request.SetPath(tmp);
 					document.PutDynamic(request);
 					return "";

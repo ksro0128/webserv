@@ -135,7 +135,7 @@ void CgiProcessor::ExcuteCgi(Document &doc)
 			fcntl(p1[1], F_SETFL, O_NONBLOCK);
 			if (request.GetBody().length() > 0)
 			{
-				// std::cout << "there is body to write cgi and write pipe is " << p1[1] << std::endl;
+				std::cout << "there is body to write cgi and write pipe is " << p1[1] << std::endl;
 				setWriteEvent(p1[1]);
 				doc.PutPipeInfo(p1[1], key);
 			}
@@ -362,20 +362,16 @@ void CgiProcessor::inChild(Request &request, Server &server, std::vector<std::st
 		addCgiEnv("HTTP_" + key, value);
 	}
 	addCgiEnv("REQUEST_METHOD", method);
-	// addCgiEnv("SCRIPT_NAME", path);
+	addCgiEnv("SCRIPT_NAME", path);
 	addCgiEnv("CONTENT_TYPE", request.GetHeader("content-type"));
-	// addCgiEnv("CONTENT_LENGTH", inttoString(body.length()));
-	// addCgiEnv("GATEWAY_INTERFACE", "CGI/1.1");
-	// addCgiEnv("HTTP_ACCEPT", request.GetHeader("accept"));
-	// addCgiEnv("HTTP_ACCEPT_CHARSET", request.GetHeader("accept-charset"));
-	// addCgiEnv("HTTP_HOST", request.GetHeader("host"));
-	// addCgiEnv("HTTP_USER_AGENT", request.GetHeader("user-agent"));
+	addCgiEnv("CONTENT_LENGTH", inttoString(body.length()));
+	addCgiEnv("GATEWAY_INTERFACE", "CGI/1.1");
 	addCgiEnv("PATH_INFO", path);
-	// addCgiEnv("PATH_TRANSLATED", path);
+	addCgiEnv("PATH_TRANSLATED", path);
 	// std::cout << "path is " << path << std::endl;
-	// addCgiEnv("QUERY_STRING", query);
-	// addCgiEnv("SERVER_NAME", server.GetServerName()[0]);
-	// addCgiEnv("SERVER_PORT", inttoString(server.GetPort()[0]));
+	addCgiEnv("QUERY_STRING", query);
+	addCgiEnv("SERVER_NAME", server.GetServerName()[0]);
+	addCgiEnv("SERVER_PORT", inttoString(server.GetPort()[0]));
 	addCgiEnv("SERVER_PROTOCOL", request.GetVersion());
 	// addCgiEnv("SERVER_SOFTWARE", "webserv");
 

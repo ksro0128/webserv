@@ -397,6 +397,7 @@ void Request::checkEssential()
     if (m_path.length() > 1024 && m_status == 200)
     {
         m_status = 414;
+        std::cout << "URI is too long\n";
         m_reqClose = 1;
     }
     unsigned long pos;
