@@ -362,7 +362,7 @@ void CgiProcessor::inChild(Request &request, Server &server, std::vector<std::st
 		addCgiEnv("HTTP_" + key, value);
 	}
 	addCgiEnv("REQUEST_METHOD", method);
-	addCgiEnv("SCRIPT_NAME", path);
+	// addCgiEnv("SCRIPT_NAME", path);
 	addCgiEnv("CONTENT_TYPE", request.GetHeader("content-type"));
 	addCgiEnv("CONTENT_LENGTH", inttoString(body.length()));
 	addCgiEnv("GATEWAY_INTERFACE", "CGI/1.1");
@@ -476,6 +476,10 @@ void CgiProcessor::parseCgiBody(Response& response, std::string& body)
 {
 	size_t start = 0;
 	size_t pos;
+	if (body.length() > 100)
+		std::cout << "body is " << body.substr(0, 100) << std::endl;
+	else
+		std::cout << "body is " << body << std::endl;
 	std::multimap<std::string, std::string> headers = response.GetHeaders();
 	while ((pos = body.find("\r\n", start)) != std::string::npos)
 	{
@@ -505,8 +509,8 @@ void CgiProcessor::parseCgiBody(Response& response, std::string& body)
 			response.SetStatusCode(status);
 			response.SetStatusMessage(value);
 		}
-		else
-			response.SetHeader(key, value);
+		// else
+		// 	response.SetHeader(key, value);
 		// std::cout << temp << std::endl;
 		start = pos + 2;
 	}

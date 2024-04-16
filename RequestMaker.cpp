@@ -46,11 +46,12 @@ void RequestMaker::makeRequest(Document &doc, int fd)
     }
     buf[bytes] = '\0';
     std::string buff(buf);
+    std::cout << "read event from fd " << fd << std::endl;
     // std::cout << "read bytes from fd " << fd << " : " << bytes << std::endl;
     // std::cout << "read buf: " << buf << std::endl;
     doc.GetIncomplete(fd).ParseRequest(fd,buff);
-    if (doc.GetIncomplete(fd).IsComplete() || doc.GetIncomplete(fd).GetReqClose() == 1) // 헤더 파싱에러일 때, 왜 server not found 에러가 뜨는가????
-    // if (doc.GetIncomplete(fd).IsComplete())
+    // if (doc.GetIncomplete(fd).IsComplete() || doc.GetIncomplete(fd).GetReqClose() == 1) // 헤더 파싱에러일 때, 왜 server not found 에러가 뜨는가????
+    if (doc.GetIncomplete(fd).IsComplete())
     {
         // if (doc.GetIncomplete(fd).GetReqClose() == 1)
         // {

@@ -2,24 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>파일 업로드 폼</title>
+    <title>File Upload Form</title>
 </head>
 <body>
-    <h2>파일 업로드</h2>
-    <form action="YOUR_SERVER_ENDPOINT" method="post" enctype="multipart/form-data">
-        <p>
-            <label for="file1">파일 1:</label>
-            <input type="file" id="file1" name="file1">
-        </p>
-        <p>
-            <label for="file2">파일 2:</label>
-            <input type="file" id="file2" name="file2">
-        </p>
-        <p>
-            <label for="file3">파일 3:</label>
-            <input type="file" id="file3" name="file3">
-        </p>
-        <input type="submit" value="업로드">
+    <h2>Upload a File</h2>
+    <form action="upload.php" method="post" enctype="multipart/form-data">
+        Select a file to upload:
+        <input type="file" name="uploadedFile">
+        <input type="submit" value="Upload File">
     </form>
 </body>
 </html>
